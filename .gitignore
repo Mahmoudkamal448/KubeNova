@@ -1,0 +1,9 @@
+node_modules/
+dist/
+out/
+release/
+*.log
+backend/bin/
+frontend/resources/bin/
+.DS_Store
+.env
