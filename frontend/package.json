@@ -1,7 +1,7 @@
 {
   "name": "kubenova",
   "productName": "KubeNova",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI-powered, enterprise-ready Kubernetes IDE",
   "author": {
     "name": "KubeNova",
@@ -43,8 +43,20 @@
     "mac": {
       "category": "public.app-category.developer-tools",
       "target": [
-        "dmg",
-        "zip"
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
       ]
     },
     "win": {
@@ -69,7 +81,15 @@
         "owner": "Mahmoudkamal448",
         "repo": "infrastructue-rebo"
       }
-    ]
+    ],
+    "nsis": {
+      "artifactName": "KubeNova-Setup-${version}-win-${arch}.${ext}",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "portable": {
+      "artifactName": "KubeNova-Portable-${version}-win-${arch}.${ext}"
+    }
   },
   "dependencies": {
     "@codemirror/lang-yaml": "^6.1.1",

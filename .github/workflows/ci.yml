@@ -82,7 +82,7 @@ jobs:
             frontend/release/*.zip
             frontend/release/*.AppImage
             frontend/release/*.deb
-            frontend/release/*.yml
+            frontend/release/latest*.yml
           if-no-files-found: error
 
   release:
