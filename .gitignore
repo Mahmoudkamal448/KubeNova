@@ -7,3 +7,4 @@ backend/bin/
 frontend/resources/bin/
 .DS_Store
 .env
+dist-electron/

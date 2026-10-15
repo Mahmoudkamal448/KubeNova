@@ -1,0 +1,12 @@
+[
+  {
+    "id": "hello",
+    "name": "Hello KubeNova",
+    "description": "Example plugin with panels, an Ingress NGINX dashboard, a theme and a custom AI tool.",
+    "author": "KubeNova",
+    "version": "1.0.0",
+    "download": "https://github.com/mahmoudkamal448/infrastructue-rebo/releases/latest/download/plugin-hello.zip",
+    "tags": ["example", "dashboard", "theme", "ai-tool"],
+    "stars": 0
+  }
+]

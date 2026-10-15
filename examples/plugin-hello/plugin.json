@@ -1,0 +1,35 @@
+{
+  "id": "hello",
+  "name": "Hello KubeNova",
+  "version": "1.0.0",
+  "author": "KubeNova",
+  "description": "Example plugin: a sidebar panel, a resource tab for Deployments, an Ingress NGINX dashboard, a theme and a custom AI tool.",
+  "entry": "index.js",
+  "panels": [
+    { "id": "hello.summary", "title": "Namespace summary", "location": "sidebar" },
+    { "id": "hello.deploy-images", "title": "Images", "location": "resource-tab", "kinds": ["Deployment", "StatefulSet", "DaemonSet"] }
+  ],
+  "dashboards": [
+    {
+      "id": "ingress-nginx",
+      "title": "Ingress NGINX",
+      "panels": [
+        { "title": "Requests / s", "type": "line", "unit": "rps", "query": "sum by (ingress) (rate(nginx_ingress_controller_requests[5m]))" },
+        { "title": "5xx ratio", "type": "line", "unit": "percent", "query": "sum(rate(nginx_ingress_controller_requests{status=~\"5..\"}[5m])) / sum(rate(nginx_ingress_controller_requests[5m]))" }
+      ]
+    }
+  ],
+  "themes": [
+    { "id": "hello-midnight", "name": "Midnight Orange", "dark": true, "colors": { "bg": "#0d1117", "bg2": "#161b22", "panel": "#0d1117", "accent": "#ff7a00", "accent2": "#ff3d71" } }
+  ],
+  "shortcuts": [{ "keys": "Mod+Shift+H", "command": "hello.summary" }],
+  "aiTools": [
+    {
+      "name": "image_age",
+      "description": "Report how old a container image tag is according to its registry (demo: echoes the input).",
+      "properties": { "image": { "type": "string", "description": "Image reference" } },
+      "required": ["image"],
+      "command": ["node", "tool.cjs"]
+    }
+  ]
+}

@@ -57,7 +57,7 @@ var topologyTypes = []schema.GroupVersionResource{
 // Topology builds a live dependency graph for a namespace: ownership chains,
 // service selectors, ingress/HTTPRoute backends and pod volume/config usage.
 func (s *Service) Topology(ctx context.Context, clusterID, ns string) (*Graph, error) {
-	g := &Graph{}
+	g := &Graph{Nodes: []GraphNode{}, Edges: []GraphEdge{}}
 	nodeID := func(kind, ns, name string) string { return kind + "/" + ns + "/" + name }
 	type item struct {
 		row Row
@@ -152,7 +152,7 @@ func (s *Service) Topology(ctx context.Context, clusterID, ns string) (*Graph, e
 	for _, e := range g.Edges {
 		connected[e.From], connected[e.To] = true, true
 	}
-	var nodes []GraphNode
+	nodes := []GraphNode{}
 	for _, n := range g.Nodes {
 		switch n.Kind {
 		case "ConfigMap", "Secret", "ServiceAccount":
@@ -212,7 +212,7 @@ func (s *Service) SearchAcross(ctx context.Context, clusterIDs []string, query s
 	}
 	q := strings.ToLower(query)
 	var mu sync.Mutex
-	var hits []SearchHit
+	hits := []SearchHit{}
 	sem := make(chan struct{}, 16)
 	var wg sync.WaitGroup
 	for _, cid := range clusterIDs {
@@ -344,12 +344,12 @@ func (s *Service) Compare(ctx context.Context, a, b, resource, ns string) ([]Com
 		return nil, err
 	}
 	key := func(ns, n string) string { return ns + "/" + n }
+	out := []CompareEntry{}
 	mb := map[string]string{}
 	for i := range lb.Items {
 		y, _ := ToYAML(CleanForExport(&lb.Items[i]).Object)
 		mb[key(lb.Items[i].GetNamespace(), lb.Items[i].GetName())] = y
 	}
-	var out []CompareEntry
 	for i := range la.Items {
 		u := &la.Items[i]
 		k := key(u.GetNamespace(), u.GetName())

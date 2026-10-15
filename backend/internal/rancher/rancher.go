@@ -346,7 +346,7 @@ func (s *Service) ProjectNamespaces(ctx context.Context, id, clusterID, projectI
 		pid = pid[i+1:]
 	}
 	err = s.do(ctx, sv, "GET", "/k8s/clusters/"+clusterID+"/api/v1/namespaces?labelSelector="+url.QueryEscape("field.cattle.io/projectId="+pid), nil, &res)
-	var out []string
+	out := []string{}
 	for _, n := range res.Items {
 		out = append(out, n.Metadata.Name)
 	}
