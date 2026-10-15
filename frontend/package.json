@@ -3,7 +3,10 @@
   "productName": "KubeNova",
   "version": "1.0.0",
   "description": "AI-powered, enterprise-ready Kubernetes IDE",
-  "author": "KubeNova",
+  "author": {
+    "name": "KubeNova",
+    "email": "mahmoudkamal448@gmail.com"
+  },
   "license": "Apache-2.0",
   "main": "dist-electron/main.cjs",
   "type": "module",
@@ -53,11 +56,20 @@
     "linux": {
       "target": [
         "AppImage",
-        "deb",
-        "rpm"
+        "deb"
       ],
-      "category": "Development"
-    }
+      "category": "Development",
+      "maintainer": "KubeNova <mahmoudkamal448@gmail.com>",
+      "executableName": "kubenova"
+    },
+    "artifactName": "KubeNova-${version}-${os}-${arch}.${ext}",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Mahmoudkamal448",
+        "repo": "infrastructue-rebo"
+      }
+    ]
   },
   "dependencies": {
     "@codemirror/lang-yaml": "^6.1.1",
@@ -89,5 +101,6 @@
     "typescript": "^5.6.3",
     "vite": "^5.4.10",
     "wait-on": "^8.0.1"
-  }
+  },
+  "homepage": "https://github.com/mahmoudkamal448/infrastructue-rebo"
 }

@@ -64,6 +64,9 @@ jobs:
         working-directory: frontend
       - run: npm run dist:${{ matrix.target }} -- --publish never
         working-directory: frontend
+        env:
+          # Unsigned builds; add CSC_LINK/CSC_KEY_PASSWORD (and Apple notarization secrets) to sign.
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
       - uses: actions/upload-artifact@v4
         with:
           name: kubenova-${{ matrix.target }}
@@ -73,4 +76,20 @@ jobs:
             frontend/release/*.zip
             frontend/release/*.AppImage
             frontend/release/*.deb
-            frontend/release/*.rpm
+            frontend/release/*.yml
+          if-no-files-found: error
+
+  release:
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

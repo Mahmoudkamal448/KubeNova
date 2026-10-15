@@ -18,7 +18,7 @@ dev: backend
 	cd backend && ./bin/kubenova-server --listen 127.0.0.1:7443 --token dev & \
 	cd frontend && npx vite
 
-# Desktop installers for the current OS (Windows: NSIS/portable, macOS: dmg/zip, Linux: AppImage/deb/rpm)
+# Desktop installers for the current OS (Windows: NSIS/portable, macOS: dmg/zip, Linux: AppImage/deb)
 dist:
 	cd frontend && npm ci && npm run dist
 
