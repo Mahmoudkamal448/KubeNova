@@ -39,7 +39,7 @@ import (
 )
 
 // Version is the application version.
-var Version = "1.0.3"
+var Version = "1.0.4"
 
 // Server wires services to HTTP handlers.
 type Server struct {
