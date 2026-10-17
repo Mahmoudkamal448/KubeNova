@@ -33,6 +33,7 @@ export interface Cluster {
   tags?: string[];
   lastOpened?: string;
   health?: Health;
+  connected?: boolean;
 }
 
 export interface APIResource {

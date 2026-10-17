@@ -53,6 +53,13 @@ export function SettingsView() {
         <div className="card col"><h3>Performance & general</h3>
           <Field label="Theme"><select value={s.theme} onChange={(e) => s.setTheme(e.target.value)}><option value="dark">Dark</option><option value="light">Light</option><option value="system">System</option></select></Field>
           <Field label="List page size (lazy loading)"><input type="number" value={st.pageSize} onChange={(e) => set("pageSize", +e.target.value)} /></Field>
+          <Field label="Which clusters KubeNova contacts in the background">
+            <select value={st.healthMode || "opened"} onChange={(e) => set("healthMode", e.target.value)}>
+              <option value="opened">Only clusters I open (recommended)</option>
+              <option value="all">All clusters (status for every cluster, slower)</option>
+              <option value="off">None (only when I act on a cluster)</option>
+            </select>
+          </Field>
           <Field label="Background health check interval (s)"><input type="number" value={st.healthIntervalSeconds} onChange={(e) => set("healthIntervalSeconds", +e.target.value)} /></Field>
           <Field label="Kubeconfig folder sync interval (s)"><input type="number" min={1} value={st.kubeconfigSyncSeconds || 3} onChange={(e) => set("kubeconfigSyncSeconds", +e.target.value)} /></Field>
           <Field label="Health check workers (parallel clusters)"><input type="number" value={st.healthWorkers} onChange={(e) => set("healthWorkers", +e.target.value)} /></Field>

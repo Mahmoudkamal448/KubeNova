@@ -2,6 +2,10 @@ package clusters
 
 import (
 	"context"
+
+	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+
 	"fmt"
 	"io/fs"
 	"os"
@@ -106,8 +110,14 @@ func walkDir(d *SyncDir, visit func(path string)) {
 	})
 }
 
-// collectSourcesLocked lists every kubeconfig file from all origins, de-duplicated.
-func (m *Manager) collectSourcesLocked() []source {
+// collectSources lists every kubeconfig file from all origins, de-duplicated.
+// It walks the file system, so callers must not hold m.mu: on a slow network
+// drive the walk can take a while and must not block the rest of the app.
+func (m *Manager) collectSources() []source {
+	m.mu.RLock()
+	dirs := append([]SyncDir(nil), m.state.Dirs...)
+	files := append([]string(nil), m.state.Sources...)
+	m.mu.RUnlock()
 	seen := map[string]bool{}
 	var out []source
 	add := func(p, origin string, d *SyncDir) {
@@ -129,11 +139,11 @@ func (m *Manager) collectSourcesLocked() []source {
 	for _, p := range m.homeSources() {
 		add(p, "default", nil)
 	}
-	for i := range m.state.Dirs {
-		d := &m.state.Dirs[i]
+	for i := range dirs {
+		d := &dirs[i]
 		walkDir(d, func(p string) { add(p, "synced", d) })
 	}
-	for _, p := range m.state.Sources {
+	for _, p := range files {
 		add(p, "file", nil)
 	}
 	if entries, err := os.ReadDir(m.ImportDir()); err == nil {
@@ -320,11 +330,12 @@ func (m *Manager) StartSync(ctx context.Context) {
 				return
 			case <-time.After(interval):
 			}
+			srcs := m.collectSources()
+			cur := stampsOf(srcs)
 			m.mu.RLock()
-			srcs := m.collectSourcesLocked()
 			prev := m.stamps
 			m.mu.RUnlock()
-			if sameStamps(prev, stampsOf(srcs)) {
+			if sameStamps(prev, cur) {
 				m.mu.Lock()
 				m.lastScan = time.Now()
 				m.mu.Unlock()
@@ -333,6 +344,29 @@ func (m *Manager) StartSync(ctx context.Context) {
 			m.Reload()
 		}
 	}()
+}
+
+// parsed is a cached parse result for one kubeconfig file.
+type parsed struct {
+	stamp stamp
+	cfg   *clientcmdapi.Config
+	err   error
+}
+
+// parse loads a kubeconfig, reusing the previous result when the file's size
+// and modification time are unchanged.
+func (m *Manager) parse(path string, st stamp) (*clientcmdapi.Config, error) {
+	m.cacheMu.Lock()
+	if c, ok := m.parseCache[path]; ok && c.stamp == st {
+		m.cacheMu.Unlock()
+		return c.cfg, c.err
+	}
+	m.cacheMu.Unlock()
+	cfg, err := clientcmd.LoadFromFile(path)
+	m.cacheMu.Lock()
+	m.parseCache[path] = parsed{stamp: st, cfg: cfg, err: err}
+	m.cacheMu.Unlock()
+	return cfg, err
 }
 
 func (m *Manager) checkNew(ctx context.Context, ids []string) {

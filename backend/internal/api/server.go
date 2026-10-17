@@ -128,10 +128,19 @@ func (s *Server) Start(ctx context.Context) {
 	if workers <= 0 {
 		workers = 16
 	}
+	s.Clusters.HealthMode = healthMode(cfg.HealthMode)
 	s.Clusters.StartBackgroundHealth(ctx, interval, workers)
 	s.Clusters.SyncInterval = syncInterval(cfg.KubeconfigSync)
 	s.Clusters.StartSync(ctx)
 	go s.MCP.Sync(ctx, cfg.MCPServers)
+}
+
+func healthMode(m string) string {
+	switch m {
+	case clusters.HealthAll, clusters.HealthOff:
+		return m
+	}
+	return clusters.HealthOpened
 }
 
 func syncInterval(seconds int) time.Duration {

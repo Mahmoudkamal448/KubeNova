@@ -28,6 +28,8 @@ type Settings struct {
 	MarketplaceURL   string              `json:"marketplaceUrl"`
 	DefaultNamespace string              `json:"defaultNamespace"`
 	KubeconfigSync   int                 `json:"kubeconfigSyncSeconds"`
+	// HealthMode: "opened" (only clusters you open), "all" or "off".
+	HealthMode string `json:"healthMode"`
 }
 
 // Defaults returns default settings.
@@ -39,6 +41,7 @@ func Defaults() Settings {
 		HealthWorkers:  16,
 		PageSize:       500,
 		KubeconfigSync: 3,
+		HealthMode:     "opened",
 		MarketplaceURL: "https://raw.githubusercontent.com/mahmoudkamal448/infrastructue-rebo/main/marketplace/index.json",
 		Shortcuts: map[string]string{
 			"palette": "Mod+K", "search": "Mod+Shift+F", "terminal": "Mod+`", "ai": "Mod+I",

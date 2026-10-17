@@ -7,6 +7,7 @@ declare global {
       openDialog: (opts: { directory?: boolean; filters?: { name: string; extensions: string[] }[] }) => Promise<string[]>;
       encrypt: (s: string) => Promise<string>;
       decrypt: (s: string) => Promise<string>;
+      rancherLogin?: (opts: { url: string; insecure?: boolean }) => Promise<{ token?: string; cancelled?: boolean }>;
       platform: string;
     };
   }

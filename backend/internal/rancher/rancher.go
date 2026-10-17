@@ -7,12 +7,8 @@ package rancher
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
-	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/tls"
-	"crypto/x509"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -43,7 +39,7 @@ type Service struct {
 	Store   *store.Store
 	Kube    *clusters.Manager
 	mu      sync.Mutex
-	pending map[string]*rsa.PrivateKey // SSO login requests
+	pending map[string]ssoRequest // SSO login requests in progress
 }
 
 func (s *Service) load() []Server {
@@ -169,96 +165,6 @@ func (s *Service) version(ctx context.Context, sv Server) (string, error) {
 	}
 	err := s.do(ctx, sv, "GET", "/v3/settings/server-version", nil, &v)
 	return v.Value, err
-}
-
-// Login authenticates with username/password against a provider
-// (local, activeDirectory, openLdap, freeIpa, ...) and stores the token.
-func (s *Service) Login(ctx context.Context, id, provider, username, password string) error {
-	sv, err := s.server(id)
-	if err != nil {
-		return err
-	}
-	if provider == "" {
-		provider = "local"
-	}
-	path := fmt.Sprintf("/v3-public/%sProviders/%s?action=login", provider, strings.ToLower(provider))
-	var res struct {
-		Token string `json:"token"`
-	}
-	sv.Token = ""
-	if err := s.do(ctx, sv, "POST", path, map[string]any{"username": username, "password": password, "responseType": "token", "description": "KubeNova", "ttl": 0}, &res); err != nil {
-		return err
-	}
-	sv.Token, sv.User = res.Token, username
-	_, err = s.Upsert(sv)
-	return err
-}
-
-// SSOStart begins a browser based SSO login (any provider configured in
-// Rancher: Azure AD, Okta/SAML, Keycloak, GitHub, OIDC...). It returns the
-// URL the user must open; SSOPoll completes the login.
-func (s *Service) SSOStart(id string) (string, string, error) {
-	sv, err := s.server(id)
-	if err != nil {
-		return "", "", err
-	}
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		return "", "", err
-	}
-	pub, _ := x509.MarshalPKIXPublicKey(&key.PublicKey)
-	pemPub := "-----BEGIN PUBLIC KEY-----\n" + base64.StdEncoding.EncodeToString(pub) + "\n-----END PUBLIC KEY-----\n"
-	reqID := make([]byte, 16)
-	_, _ = rand.Read(reqID)
-	rid := "kubenova-" + hex.EncodeToString(reqID)
-	s.mu.Lock()
-	if s.pending == nil {
-		s.pending = map[string]*rsa.PrivateKey{}
-	}
-	s.pending[rid] = key
-	s.mu.Unlock()
-	q := url.Values{"requestId": {rid}, "publicKey": {base64.StdEncoding.EncodeToString([]byte(pemPub))}, "responseType": {"kubeconfig"}}
-	return rid, sv.URL + "/dashboard/auth/login?" + q.Encode(), nil
-}
-
-// SSOPoll checks whether the SSO login completed and stores the token.
-func (s *Service) SSOPoll(ctx context.Context, id, requestID string) (bool, error) {
-	sv, err := s.server(id)
-	if err != nil {
-		return false, err
-	}
-	s.mu.Lock()
-	key := s.pending[requestID]
-	s.mu.Unlock()
-	if key == nil {
-		return false, fmt.Errorf("unknown login request")
-	}
-	sv.Token = ""
-	var res struct {
-		Token   string `json:"token"`
-		Expired bool   `json:"expired"`
-	}
-	if err := s.do(ctx, sv, "GET", "/v3-public/authTokens/"+requestID, nil, &res); err != nil {
-		return false, nil // not ready yet
-	}
-	if res.Token == "" {
-		return false, nil
-	}
-	enc, err := base64.StdEncoding.DecodeString(res.Token)
-	if err != nil {
-		return false, err
-	}
-	plain, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, key, enc, nil)
-	if err != nil {
-		return false, err
-	}
-	_ = s.do(ctx, sv, "DELETE", "/v3-public/authTokens/"+requestID, nil, nil)
-	sv.Token = string(plain)
-	s.mu.Lock()
-	delete(s.pending, requestID)
-	s.mu.Unlock()
-	_, err = s.Upsert(sv)
-	return err == nil, err
 }
 
 // Cluster is a Rancher managed cluster.

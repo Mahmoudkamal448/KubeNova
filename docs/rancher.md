@@ -35,17 +35,19 @@ Enter a **name** (it becomes the group name for the imported clusters) and the *
 
 ## Step 3: Log in
 
-The server now shows a yellow **login** badge, and the **Authentication** tab offers three ways in:
+The server now shows a yellow **login** badge. The **Authentication** tab shows which login providers your Rancher has, and offers three ways in:
 
 | Option | Use it when |
 |---|---|
 | **Username & password** | You log in to Rancher with a local, Active Directory, OpenLDAP or FreeIPA account. Pick the provider from the drop-down. |
 | **API token** | You created a token in Rancher (see "Before you start"). |
-| **Single sign-on** | Your Rancher uses Azure AD, Okta, Keycloak, GitHub, SAML or OIDC. KubeNova opens your browser; finish the login there and KubeNova picks up the token automatically. |
+| **Single sign-on** | Your Rancher uses Azure AD, Okta, Keycloak (OIDC or SAML), GitHub, Google, Ping, ADFS or any other provider. Click **Log in with Rancher**: KubeNova opens Rancher's own login page in a KubeNova window. Log in as usual; the window closes on its own and you're logged in. |
 
 ![Rancher login options](images/rancher/04-login.png)
 
 After a successful login, the badge turns green (**auth**).
+
+> **Why a KubeNova window and not my browser?** Rancher's "log in from a CLI through the browser" feature only works with SAML providers. With OIDC (Keycloak OIDC, Okta OIDC, Azure AD, GitHub, Google…) the login works in the browser, but the browser never hands the token back to the app. So KubeNova shows the Rancher login page itself and picks up the session as soon as you're logged in. Your identity provider's own cookies are kept, so the next login is usually a single click.
 
 ## Step 4: Import all kubeconfigs
 
@@ -62,7 +64,9 @@ KubeNova confirms the import:
 
 ## Step 5: Use the clusters
 
-Open **Clusters** in the left sidebar. The imported clusters appear in a group named **Rancher: \<server name\>**. Their API addresses point at Rancher's proxy (`…/k8s/clusters/<id>`). Click **Check health** to see version, latency and status for all of them.
+Open **Clusters** in the left sidebar. The imported clusters appear in a group named **Rancher: \<server name\>**. Their API addresses point at Rancher's proxy (`…/k8s/clusters/<id>`).
+
+KubeNova **doesn't connect to any of them yet**: each one shows **not connected**. Click the cluster you want to work with and KubeNova connects to that one only (green dot, version and latency appear). **Disconnect** stops all traffic to it again. **Check all now** contacts every cluster once if you want a status overview.
 
 ![Imported clusters grouped under the Rancher server](images/rancher/09-clusters-view.png)
 
@@ -111,4 +115,5 @@ The data dir is `~/.config/KubeNova` on Linux, `~/Library/Application Support/Ku
 | Login works in the browser but not in KubeNova | Corporate proxy: set it in **Settings → Network → HTTP(S) proxy**. |
 | `401 Unauthorized` when listing clusters | The token expired or was revoked. Log in again. |
 | A cluster shows *unreachable* after import | The cluster itself is down or disconnected from Rancher (check its state in Rancher). |
-| SSO window finishes but KubeNova keeps waiting | Make sure you completed the login in the browser window KubeNova opened; it waits up to 5 minutes. |
+| "Waiting for browser login…" never finishes | You're on an old version, or running KubeNova in a plain browser (not the desktop app) with an OIDC provider. Use **Log in with Rancher** in the desktop app, or paste an API token. |
+| The login window shows an identity-provider error about "embedded browsers" | Use the **API token** option instead. |

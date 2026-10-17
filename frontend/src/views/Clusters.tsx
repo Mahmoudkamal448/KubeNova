@@ -30,8 +30,8 @@ export function ClustersView() {
   }, [list]);
   const stats = useMemo(() => ({
     total: s.clusters.length,
-    healthy: s.clusters.filter((c) => c.health?.status === "healthy").length,
-    down: s.clusters.filter((c) => c.health?.status === "unreachable").length,
+    connected: s.clusters.filter((c) => c.connected).length,
+    down: s.clusters.filter((c) => c.connected && c.health?.status === "unreachable").length,
     certs: s.clusters.filter((c) => c.health?.certWarning).length,
   }), [s.clusters]);
 
@@ -40,8 +40,8 @@ export function ClustersView() {
       <h1>Clusters <Badge>{stats.total}</Badge></h1>
       <div className="grid g4" style={{ marginBottom: 12 }}>
         <div className="card"><h3>Total clusters</h3><div className="stat">{stats.total}</div><div className="muted small">{s.groups.length} groups</div></div>
-        <div className="card"><h3>Healthy</h3><div className="stat" style={{ color: "var(--ok)" }}>{stats.healthy}</div></div>
-        <div className="card"><h3>Unreachable</h3><div className="stat" style={{ color: stats.down ? "var(--err)" : undefined }}>{stats.down}</div></div>
+        <div className="card"><h3>Connected</h3><div className="stat" style={{ color: "var(--ok)" }}>{stats.connected}</div><div className="muted small">KubeNova only talks to clusters you open</div></div>
+        <div className="card"><h3>Unreachable</h3><div className="stat" style={{ color: stats.down ? "var(--err)" : undefined }}>{stats.down}</div><div className="muted small">of the connected clusters</div></div>
         <div className="card"><h3><AlertTriangle size={13} />Certificate warnings</h3><div className="stat" style={{ color: stats.certs ? "var(--warn)" : undefined }}>{stats.certs}</div></div>
       </div>
       <div className="row wrap" style={{ marginBottom: 12 }}>
@@ -55,8 +55,11 @@ export function ClustersView() {
         <button className="btn" onClick={() => setSourcesOpen(true)}><FolderSync size={14} />Kubeconfig sources</button>
         <button className="btn" onClick={() => setImportOpen(true)}><Upload size={14} />Paste kubeconfig</button>
         <a className="btn" href={downloadUrl("/kubeconfigs/merged")} download="kubeconfig-merged.yaml"><Download size={14} />Export merged</a>
-        <button className="btn" disabled={busy} onClick={async () => { setBusy(true); await act(() => api.post("/clusters/health")); await s.loadClusters(); setBusy(false); }}>
-          <Activity size={14} />{busy ? "Checking…" : "Check health"}
+        <button className="btn" disabled={busy} title="Contacts every cluster once to refresh its status" onClick={async () => {
+          if (s.clusters.length > 10 && !confirm(`Contact all ${s.clusters.length} clusters now to refresh their status? Clusters that need a login (OIDC, cloud SSO…) may ask you to sign in.`)) return;
+          setBusy(true); await act(() => api.post("/clusters/health")); await s.loadClusters(); setBusy(false);
+        }}>
+          <Activity size={14} />{busy ? "Checking…" : "Check all now"}
         </button>
         <button className="btn" onClick={async () => { await api.post("/clusters/reload"); s.loadClusters(); }}><RefreshCw size={14} /></button>
       </div>
@@ -83,11 +86,12 @@ function ClusterCard({ c, onEdit }: { c: Cluster; onEdit: () => void }) {
   return (
     <div className="card tile" style={{ borderColor: active ? "var(--accent)" : c.color || undefined }} onClick={() => { s.selectCluster(c.id); s.setView("explorer"); }}>
       <div className="row">
-        <span className={`dot ${h?.status || ""}`} />
+        <span className={`dot ${c.connected ? h?.status || "" : ""}`} title={c.connected ? h?.status : "Not connected"} />
         <b className="grow" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{c.name}</b>
         <button className="btn ghost sm" title="Favorite" onClick={async (e) => { e.stopPropagation(); await api.patch(`/clusters/${c.id}`, { alias: c.name === c.context ? "" : c.name, group: c.group, favorite: !c.favorite, color: c.color, tags: c.tags }); s.loadClusters(); }}>
           <Star size={14} fill={c.favorite ? "var(--warn)" : "none"} color={c.favorite ? "var(--warn)" : "currentColor"} />
         </button>
+        {c.connected && <button className="btn ghost sm" title="Stop talking to this cluster until you open it again" onClick={async (e) => { e.stopPropagation(); await api.post(`/clusters/${c.id}/disconnect`); s.loadClusters(); }}>Disconnect</button>}
         <button className="btn ghost sm" onClick={(e) => { e.stopPropagation(); onEdit(); }}>Edit</button>
       </div>
       <div className="muted small" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.server}</div>
@@ -95,7 +99,8 @@ function ClusterCard({ c, onEdit }: { c: Cluster; onEdit: () => void }) {
         {h?.version && <Badge kind="info">{h.version}</Badge>}
         {h?.distribution && <Badge>{h.distribution}</Badge>}
         <Badge>{c.authType}</Badge>
-        {h && h.status !== "unknown" && <Badge kind={h.latencyMs > 500 ? "warn" : ""}>{h.latencyMs} ms</Badge>}
+        {c.connected ? <Badge kind="ok">connected</Badge> : <Badge>not connected</Badge>}
+        {c.connected && h && h.status !== "unknown" && <Badge kind={h.latencyMs > 500 ? "warn" : ""}>{h.latencyMs} ms</Badge>}
         {(c.tags || []).map((t) => <span key={t} className="chip">{t}</span>)}
       </div>
       {h?.nodes ? (
@@ -108,9 +113,9 @@ function ClusterCard({ c, onEdit }: { c: Cluster; onEdit: () => void }) {
           </div>
         </div>
       ) : null}
-      {h?.error && <div className="small" style={{ color: "var(--err)", marginTop: 6, maxHeight: 36, overflow: "hidden" }}>{h.error}</div>}
+      {c.connected && h?.error && <div className="small" style={{ color: "var(--err)", marginTop: 6, maxHeight: 36, overflow: "hidden" }}>{h.error}</div>}
       {h?.certWarning && <div className="small row" style={{ color: "var(--warn)", marginTop: 6 }}><AlertTriangle size={12} />{h.certWarning}</div>}
-      <div className="muted small" style={{ marginTop: 6 }}>{c.lastOpened && !c.lastOpened.startsWith("0001") ? `opened ${age(c.lastOpened)} ago` : "never opened"} · checked {h?.checkedAt ? age(h.checkedAt) + " ago" : "never"}</div>
+      <div className="muted small" style={{ marginTop: 6 }}>{c.lastOpened && !c.lastOpened.startsWith("0001") ? `opened ${age(c.lastOpened)} ago` : "never opened"}{h?.checkedAt ? ` · last checked ${age(h.checkedAt)} ago` : ""}{!c.connected && " · click to connect"}</div>
     </div>
   );
 }

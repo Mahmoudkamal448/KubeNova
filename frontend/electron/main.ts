@@ -1,6 +1,6 @@
 // Electron main process: launches the Go backend as a sidecar, passes its
 // URL/token to the renderer and provides a few native integrations.
-import { app, BrowserWindow, ipcMain, shell, dialog, Menu, safeStorage } from "electron";
+import { app, BrowserWindow, ipcMain, shell, dialog, Menu, safeStorage, session } from "electron";
 import { spawn, ChildProcess } from "node:child_process";
 import path from "node:path";
 import fs from "node:fs";
@@ -98,6 +98,65 @@ ipcMain.handle("secure:decrypt", (_e, s: string) => {
   } catch {
     return "";
   }
+});
+
+// Rancher login window: loads the server's own login page so every auth
+// provider works (OIDC, Keycloak, Okta, Azure AD, GitHub, SAML, LDAP, local).
+// When Rancher sets its session cookie (R_SESS, a regular Rancher API token)
+// we hand that token to the backend and close the window. Each server gets a
+// persistent partition, so the identity provider's own session is remembered.
+ipcMain.handle("rancher:login", async (event, opts: { url: string; insecure?: boolean }) => {
+  const base = new URL(opts.url);
+  const prefix = base.pathname.replace(/\/$/, "");
+  const partition = `persist:rancher-${base.host}`;
+  const ses = session.fromPartition(partition);
+  // Drop an old Rancher session so the login page is shown, but keep the
+  // identity provider's cookies (single sign-on stays quick).
+  for (const c of await ses.cookies.get({ url: base.origin, name: "R_SESS" })) {
+    await ses.cookies.remove(base.origin + (c.path || "/"), c.name);
+  }
+  if (opts.insecure) {
+    ses.setCertificateVerifyProc((req, cb) => cb(req.hostname === base.hostname ? 0 : -3));
+  }
+  // Some identity providers (e.g. Google) refuse embedded browsers that
+  // announce themselves as Electron.
+  ses.setUserAgent(ses.getUserAgent().replace(/\s?Electron\/[\d.]+/, "").replace(/\s?kubenova\/[\d.]+/i, ""));
+  const parent = BrowserWindow.fromWebContents(event.sender) || undefined;
+  const win = new BrowserWindow({
+    width: 1000,
+    height: 780,
+    parent,
+    title: `Log in to ${base.host}`,
+    autoHideMenuBar: true,
+    webPreferences: { partition, contextIsolation: true, nodeIntegration: false, sandbox: true },
+  });
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = (result: { token?: string; cancelled?: boolean }) => {
+      if (done) return;
+      done = true;
+      ses.cookies.removeListener("changed", onChange);
+      clearInterval(timer);
+      if (!win.isDestroyed()) win.close();
+      resolve(result);
+    };
+    const onChange = (_e: unknown, cookie: Electron.Cookie, _cause: string, removed: boolean) => {
+      if (!removed && cookie.name === "R_SESS" && cookie.value) finish({ token: decodeURIComponent(cookie.value) });
+    };
+    ses.cookies.on("changed", onChange);
+    const timer = setInterval(async () => {
+      const cs = await ses.cookies.get({ url: base.origin, name: "R_SESS" });
+      const v = cs.find((c) => c.value)?.value;
+      if (v) finish({ token: decodeURIComponent(v) });
+    }, 1000);
+    win.on("closed", () => finish({ cancelled: true }));
+    // Identity providers sometimes open pop-ups; keep them in this window.
+    win.webContents.setWindowOpenHandler(({ url }) => {
+      win.loadURL(url);
+      return { action: "deny" };
+    });
+    win.loadURL(`${base.origin}${prefix}/dashboard/auth/login`);
+  });
 });
 
 app.whenReady().then(() => {

@@ -56,37 +56,90 @@ function ServerPanel({ sv, reload }: { sv: any; reload: () => void }) {
   );
 }
 
+const providerLabel: Record<string, string> = {
+  localProvider: "Local", activeDirectoryProvider: "Active Directory", openLdapProvider: "OpenLDAP", freeIpaProvider: "FreeIPA",
+  keyCloakOIDCProvider: "Keycloak (OIDC)", genericOIDCProvider: "OIDC", oidcProvider: "OIDC", cognitoProvider: "Amazon Cognito",
+  azureADProvider: "Azure AD / Entra ID", githubProvider: "GitHub", githubAppProvider: "GitHub App", googleOAuthProvider: "Google",
+  oktaProvider: "Okta (SAML)", keyCloakProvider: "Keycloak (SAML)", adfsProvider: "ADFS", pingProvider: "Ping", shibbolethProvider: "Shibboleth",
+};
+
 function Login({ sv, onDone }: { sv: any; onDone: () => void }) {
-  const [f, setF] = useState({ provider: "local", username: "", password: "" });
+  const providers = useAsync(() => api.get(`/rancher/servers/${sv.id}/providers`), [sv.id]);
+  const pw = (providers.data || []).filter((p: any) => p.login === "password");
+  const sso = (providers.data || []).filter((p: any) => p.login !== "password");
+  const hasSaml = sso.some((p: any) => p.login === "browser");
+  const [f, setF] = useState({ provider: "localProvider", username: "", password: "" });
   const [token, setToken] = useState("");
-  const [sso, setSso] = useState("");
-  const startSSO = async () => {
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { if (pw.length && !pw.some((p: any) => p.type === f.provider)) setF((x) => ({ ...x, provider: pw[0].type })); }, [providers.data]);
+
+  const saveToken = async (t: string) => {
+    const r = await act(() => api.post(`/rancher/servers/${sv.id}/token`, { token: t }), "Logged in to Rancher");
+    if (r) onDone();
+    return !!r;
+  };
+
+  // Rancher's own login page in a KubeNova window: works with every provider.
+  const windowLogin = async () => {
+    setBusy(true);
+    setStatus("Log in in the Rancher window…");
+    try {
+      const r = await window.kubenova!.rancherLogin!({ url: sv.url, insecure: sv.insecure });
+      if (r.cancelled) setStatus("Login window closed before logging in.");
+      else if (r.token) { setStatus("Checking token…"); if (await saveToken(r.token)) setStatus(""); else setStatus("Rancher rejected the session token."); }
+    } finally { setBusy(false); }
+  };
+
+  // Rancher's browser token flow (SAML providers only), used in browser mode.
+  const browserLogin = async () => {
     const r = await act(() => api.post(`/rancher/servers/${sv.id}/sso`));
     if (!r) return;
     openExternal(r.url);
-    setSso("Waiting for browser login…");
-    for (let i = 0; i < 120; i++) {
-      await new Promise((res) => setTimeout(res, 2500));
-      const p = await api.get(`/rancher/servers/${sv.id}/sso/${r.requestId}`).catch(() => ({ done: false }));
-      if (p.done) { setSso("Logged in"); onDone(); return; }
+    setBusy(true);
+    setStatus("Waiting for you to finish logging in in the browser…");
+    const deadline = Date.now() + 15 * 60 * 1000;
+    while (Date.now() < deadline) {
+      await new Promise((res) => setTimeout(res, 3000));
+      try {
+        const p = await api.get(`/rancher/servers/${sv.id}/sso/${r.requestId}`);
+        if (p.done) { setBusy(false); setStatus(""); useStore.getState().notify("Logged in to Rancher", "ok"); onDone(); return; }
+      } catch (e: any) { setBusy(false); setStatus(`Login failed: ${e.message}`); return; }
     }
-    setSso("Timed out");
+    setBusy(false);
+    setStatus("Timed out. If your Rancher uses OIDC, GitHub or Azure AD, use an API token instead.");
   };
+
   return (
-    <div className="grid g3">
-      <div className="card"><h3>Username & password</h3>
-        <div className="col">
-          <select value={f.provider} onChange={(e) => setF({ ...f, provider: e.target.value })}>{["local", "activeDirectory", "openLdap", "freeIpa"].map((p) => <option key={p}>{p}</option>)}</select>
-          <input placeholder="username" value={f.username} onChange={(e) => setF({ ...f, username: e.target.value })} />
-          <input type="password" placeholder="password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} />
-          <button className="btn primary" onClick={async () => { if (await act(() => api.post(`/rancher/servers/${sv.id}/login`, f), "Logged in")) onDone(); }}><LogIn size={13} />Login</button>
-        </div></div>
-      <div className="card"><h3>API token</h3>
-        <div className="col"><input type="password" placeholder="token-xxxxx:yyyy" value={token} onChange={(e) => setToken(e.target.value)} />
-          <button className="btn primary" onClick={async () => { if (await act(() => api.post("/rancher/servers", { ...sv, token }), "Token saved")) onDone(); }}>Save token</button></div></div>
-      <div className="card"><h3>Single sign-on</h3>
-        <div className="col"><div className="muted small">Uses any provider configured in Rancher (Azure AD, Okta, Keycloak, GitHub, SAML, OIDC). Opens your browser.</div>
-          <button className="btn primary" onClick={startSSO}>Login with SSO</button><div className="small">{sso}</div></div></div>
+    <div className="col">
+      <ErrorBox error={providers.error} />
+      {providers.data && <div className="row wrap small"><span className="muted">This Rancher offers:</span>{providers.data.map((p: any) => <span key={p.type} className="chip">{providerLabel[p.type] || p.name || p.type}</span>)}</div>}
+      <div className="grid g3">
+        <div className="card col"><h3>Single sign-on</h3>
+          {window.kubenova?.rancherLogin ? <>
+            <div className="muted small">Opens your Rancher's own login page in a KubeNova window. Works with every provider{sso.length ? `, including ${sso.map((p: any) => providerLabel[p.type] || p.type).join(", ")}` : ""}.</div>
+            <button className="btn primary" disabled={busy} onClick={windowLogin}><LogIn size={13} />Log in with Rancher</button>
+          </> : <>
+            <div className="muted small">{hasSaml ? "Opens your browser (SAML providers: Okta, ADFS, Ping, Keycloak SAML, Shibboleth)." : "In the web version, browser sign-in only works with SAML providers. Use an API token, or the desktop app's Rancher login window."}</div>
+            <button className="btn primary" disabled={busy || !hasSaml} onClick={browserLogin}><LogIn size={13} />Log in with SSO</button>
+          </>}
+          {status && <div className="small">{status}</div>}
+        </div>
+        <div className="card col"><h3>Username & password</h3>
+          {pw.length ? <>
+            <select value={f.provider} onChange={(e) => setF({ ...f, provider: e.target.value })}>{pw.map((p: any) => <option key={p.type} value={p.type}>{providerLabel[p.type] || p.type}</option>)}</select>
+            <input placeholder="username" value={f.username} onChange={(e) => setF({ ...f, username: e.target.value })} />
+            <input type="password" placeholder="password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} onKeyDown={(e) => e.key === "Enter" && (document.getElementById("rancher-pw-login") as HTMLButtonElement)?.click()} />
+            <button id="rancher-pw-login" className="btn" onClick={async () => { if (await act(() => api.post(`/rancher/servers/${sv.id}/login`, f), "Logged in to Rancher")) onDone(); }}><LogIn size={13} />Login</button>
+          </> : <div className="muted small">{providers.loading ? "Loading…" : "No username/password provider is enabled on this Rancher."}</div>}
+        </div>
+        <div className="card col"><h3>API token</h3>
+          <div className="muted small">In Rancher: your avatar → <b>Account & API Keys</b> → <b>Create API Key</b>, then paste the bearer token.</div>
+          <input type="password" placeholder="token-xxxxx:yyyy" value={token} onChange={(e) => setToken(e.target.value)} />
+          <div className="row"><button className="btn" disabled={!token} onClick={() => saveToken(token)}>Save token</button>
+            <button className="btn ghost" onClick={() => openExternal(sv.url.replace(/\/$/, "") + "/dashboard/account")}>Open Rancher</button></div>
+        </div>
+      </div>
     </div>
   );
 }

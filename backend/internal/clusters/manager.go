@@ -49,6 +49,9 @@ type Cluster struct {
 	Tags       []string  `json:"tags,omitempty"`
 	LastOpened time.Time `json:"lastOpened,omitempty"`
 	Health     *Health   `json:"health,omitempty"`
+	// Connected is true once the cluster was opened in this session. Only
+	// connected clusters are contacted in the background by default.
+	Connected bool `json:"connected"`
 }
 
 // Meta is user editable metadata persisted per cluster.
@@ -92,18 +95,30 @@ type Manager struct {
 	stamps       map[string]stamp
 	sourceStatus []SourceStatus
 	loaded       atomic.Bool
-	subMu        sync.Mutex
-	subs         map[chan struct{}]struct{}
+	reloadMu     sync.Mutex
+	cacheMu      sync.Mutex
+	parseCache   map[string]parsed
+
+	// HealthMode decides which clusters are contacted in the background:
+	// HealthOpened (default) only clusters opened in this session,
+	// HealthAll every cluster, HealthOff none.
+	HealthMode string
+	opened     map[string]bool
+	subMu      sync.Mutex
+	subs       map[chan struct{}]struct{}
 }
 
 // NewManager loads persisted state and scans all kubeconfig sources.
 func NewManager(st *store.Store) (*Manager, error) {
 	m := &Manager{
-		st:       st,
-		clusters: map[string]*Cluster{},
-		raw:      map[string]*clientcmdapi.Config{},
-		clients:  map[string]*clientSet{},
-		subs:     map[chan struct{}]struct{}{},
+		st:         st,
+		clusters:   map[string]*Cluster{},
+		raw:        map[string]*clientcmdapi.Config{},
+		clients:    map[string]*clientSet{},
+		subs:       map[chan struct{}]struct{}{},
+		parseCache: map[string]parsed{},
+		opened:     map[string]bool{},
+		HealthMode: HealthOpened,
 	}
 	if err := st.Load("clusters", &m.state); err != nil {
 		return nil, err
@@ -127,10 +142,8 @@ func (m *Manager) ImportDir() string { return filepath.Join(m.st.Dir(), "kubecon
 
 // Sources returns every kubeconfig file currently loaded or watched.
 func (m *Manager) Sources() []string {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
 	var out []string
-	for _, src := range m.collectSourcesLocked() {
+	for _, src := range m.collectSources() {
 		out = append(out, src.path)
 	}
 	return out
@@ -237,67 +250,80 @@ func (m *Manager) SetDefaultGroup(source, group string) error {
 	return nil
 }
 
-// Reload rescans every kubeconfig source and notifies subscribers. Clusters
-// that were not known before get a health check in the background (except on
-// the very first load, which the periodic health loop covers).
+// Reload rescans every kubeconfig source and notifies subscribers. File
+// system access and parsing happen without holding the manager lock, and
+// unchanged files are not re-parsed, so a slow or large folder never blocks
+// the UI. When HealthMode is "all", newly discovered clusters are checked.
 func (m *Manager) Reload() {
-	fresh := m.reloadLocked()
+	m.reloadMu.Lock()
+	fresh := m.reload()
+	m.reloadMu.Unlock()
 	m.notify()
-	if m.loaded.Swap(true) && len(fresh) > 0 {
+	if m.loaded.Swap(true) && len(fresh) > 0 && m.HealthMode == HealthAll {
 		go m.checkNew(context.Background(), fresh)
 	}
 }
 
-func (m *Manager) reloadLocked() (fresh []string) {
+type loadedSource struct {
+	source
+	stamp stamp
+	found bool
+	cfg   *clientcmdapi.Config
+	err   error
+}
+
+func (m *Manager) reload() (fresh []string) {
+	srcs := m.collectSources()
+	stamps := stampsOf(srcs)
+	loaded := make([]loadedSource, len(srcs))
+	for i, src := range srcs {
+		l := loadedSource{source: src}
+		l.stamp, l.found = stamps[src.path]
+		if l.found {
+			l.cfg, l.err = m.parse(src.path, l.stamp)
+		}
+		loaded[i] = l
+	}
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	previous := m.clusters
-	defer func() {
-		for id := range m.clusters {
-			if _, ok := previous[id]; !ok {
-				fresh = append(fresh, id)
-			}
-		}
-	}()
-	srcs := m.collectSourcesLocked()
-	newStamps := stampsOf(srcs)
 	m.clusters = map[string]*Cluster{}
 	m.raw = map[string]*clientcmdapi.Config{}
 	m.sourceStatus = nil
-	for _, src := range srcs {
-		st := SourceStatus{Path: src.path, Origin: src.origin}
-		if src.dir != nil {
-			st.Dir = src.dir.Path
+	for _, l := range loaded {
+		st := SourceStatus{Path: l.path, Origin: l.origin}
+		if l.dir != nil {
+			st.Dir = l.dir.Path
 		}
-		if s, ok := newStamps[src.path]; ok {
-			st.ModTime = s.mod
-		} else {
+		if !l.found {
 			// Missing explicit files are reported; missing defaults are not.
-			if src.origin == "file" || src.origin == "kubeconfig-env" {
+			if l.origin == "file" || l.origin == "kubeconfig-env" {
 				st.Error = "file not found"
 				m.sourceStatus = append(m.sourceStatus, st)
 			}
 			continue
 		}
-		cfg, err := clientcmd.LoadFromFile(src.path)
-		if err != nil {
+		st.ModTime = l.stamp.mod
+		if l.err != nil {
 			// In synced folders, only report files that look like kubeconfigs.
-			if src.origin != "synced" || looksLikeKubeconfig(src.path) {
-				st.Error = err.Error()
+			if l.origin != "synced" || looksLikeKubeconfig(l.path) {
+				st.Error = l.err.Error()
 				m.sourceStatus = append(m.sourceStatus, st)
 			}
 			continue
 		}
-		if src.origin == "synced" && len(cfg.Contexts) == 0 && len(cfg.Clusters) == 0 && len(cfg.AuthInfos) == 0 {
+		cfg := l.cfg
+		if l.origin == "synced" && len(cfg.Contexts) == 0 && len(cfg.Clusters) == 0 && len(cfg.AuthInfos) == 0 {
 			continue // some other YAML/JSON file
 		}
 		st.Contexts = len(cfg.Contexts)
 		m.sourceStatus = append(m.sourceStatus, st)
-		m.raw[src.path] = cfg
-		group := defaultGroup(src.dir, src.path)
+		m.raw[l.path] = cfg
+		group := defaultGroup(l.dir, l.path)
 		for ctxName, ctx := range cfg.Contexts {
-			id := ClusterID(src.path, ctxName)
-			c := &Cluster{ID: id, Name: ctxName, Context: ctxName, Source: src.path, User: ctx.AuthInfo, Namespace: ctx.Namespace, Group: group}
+			id := ClusterID(l.path, ctxName)
+			c := &Cluster{ID: id, Name: ctxName, Context: ctxName, Source: l.path, User: ctx.AuthInfo, Namespace: ctx.Namespace, Group: group, Connected: m.opened[id]}
 			if cl, ok := cfg.Clusters[ctx.Cluster]; ok {
 				c.Server = cl.Server
 			}
@@ -315,17 +341,27 @@ func (m *Manager) reloadLocked() (fresh []string) {
 			}
 			c.Health = m.state.Health[id]
 			m.clusters[id] = c
+			if _, ok := previous[id]; !ok {
+				fresh = append(fresh, id)
+			}
 		}
 	}
 	// Drop cached clients for clusters that disappeared or whose kubeconfig
 	// changed (e.g. a rotated token or a new server address).
 	for id := range m.clients {
 		c, ok := m.clusters[id]
-		if !ok || newStamps[c.Source] != m.stamps[c.Source] {
+		if !ok || stamps[c.Source] != m.stamps[c.Source] {
 			delete(m.clients, id)
 		}
 	}
-	m.stamps = newStamps
+	m.cacheMu.Lock()
+	for p := range m.parseCache {
+		if _, ok := stamps[p]; !ok {
+			delete(m.parseCache, p)
+		}
+	}
+	m.cacheMu.Unlock()
+	m.stamps = stamps
 	m.lastScan = time.Now()
 	return fresh
 }
@@ -472,8 +508,10 @@ func (m *Manager) Touch(id string) {
 		m.state.Meta[id] = meta
 	}
 	meta.LastOpened = time.Now()
+	m.opened[id] = true
 	if c, ok := m.clusters[id]; ok {
 		c.LastOpened = meta.LastOpened
+		c.Connected = true
 	}
 	m.mu.Unlock()
 	_ = m.save()
@@ -697,18 +735,67 @@ func (m *Manager) StartBackgroundHealth(ctx context.Context, every time.Duration
 		t := time.NewTicker(every)
 		defer t.Stop()
 		for {
-			m.CheckAll(ctx, workers)
 			select {
 			case <-ctx.Done():
 				return
 			case <-t.C:
 			}
+			switch m.HealthMode {
+			case HealthAll:
+				m.CheckAll(ctx, workers)
+			case HealthOff:
+			default:
+				m.checkIDs(ctx, m.openedIDs(), workers)
+			}
 		}
 	}()
 }
 
-// CheckAll checks every cluster concurrently.
+// Health modes.
+const (
+	HealthOpened = "opened"
+	HealthAll    = "all"
+	HealthOff    = "off"
+)
+
+func (m *Manager) openedIDs() []string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var ids []string
+	for id := range m.opened {
+		if _, ok := m.clusters[id]; ok {
+			ids = append(ids, id)
+		}
+	}
+	return ids
+}
+
+// Disconnect forgets a cluster's connection; it is no longer contacted in
+// the background until it is opened again.
+func (m *Manager) Disconnect(id string) {
+	m.mu.Lock()
+	delete(m.opened, id)
+	delete(m.clients, id)
+	if c, ok := m.clusters[id]; ok {
+		c.Connected = false
+	}
+	m.mu.Unlock()
+	m.notify()
+}
+
+// CheckAll checks every cluster concurrently (explicit "check all" only).
 func (m *Manager) CheckAll(ctx context.Context, workers int) {
+	var all []string
+	for _, c := range m.List("") {
+		all = append(all, c.ID)
+	}
+	m.checkIDs(ctx, all, workers)
+}
+
+func (m *Manager) checkIDs(ctx context.Context, list []string, workers int) {
+	if len(list) == 0 {
+		return
+	}
 	ids := make(chan string)
 	var wg sync.WaitGroup
 	for i := 0; i < workers; i++ {
@@ -722,9 +809,9 @@ func (m *Manager) CheckAll(ctx context.Context, workers int) {
 			}
 		}()
 	}
-	for _, c := range m.List("") {
+	for _, id := range list {
 		select {
-		case ids <- c.ID:
+		case ids <- id:
 		case <-ctx.Done():
 		}
 	}

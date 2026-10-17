@@ -75,6 +75,10 @@ func (s *Server) clusterRoutes(mux *http.ServeMux) {
 		}
 		ok(w, h)
 	})
+	mux.HandleFunc("POST /api/clusters/{id}/disconnect", func(w http.ResponseWriter, r *http.Request) {
+		s.Clusters.Disconnect(r.PathValue("id"))
+		ok(w, map[string]bool{"ok": true})
+	})
 	mux.HandleFunc("GET /api/clusters/{id}/health", func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), 20*time.Second)
 		defer cancel()

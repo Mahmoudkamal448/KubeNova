@@ -2,7 +2,7 @@
 
 Point KubeNova at one or more folders of kubeconfig files and it keeps them in sync while the app is running:
 
-- **New file** → its clusters appear (and get a health check) within a few seconds.
+- **New file** → its clusters are added within a few seconds. KubeNova doesn't connect to them until you click one (see *Connections* below).
 - **Edited file** (rotated token, new server address…) → reloaded; open connections switch to the new credentials.
 - **Deleted file** → its clusters disappear.
 
@@ -48,6 +48,14 @@ From now on, changes in the folder show up by themselves. In this example `dev/d
 - **Removing one cluster** that comes from a synced folder: delete or move its file. KubeNova won't hide individual files from a synced folder, because they'd come back on the next scan.
 - **Interval:** folders are rescanned every 3 seconds by default; change it in **Settings → Kubeconfig folder sync interval**. Rescans only compare file sizes and modification times, so they stay cheap even with hundreds of files.
 - **Sync now** forces an immediate rescan.
+
+## Connections
+
+Adding a cluster never connects to it. KubeNova only talks to clusters you **open** (click) during the session; others show **not connected**, so a folder with 200 kubeconfigs doesn't trigger 200 logins (OIDC, AWS SSO, `gcloud`…) or slow anything down.
+
+- **Disconnect** on a cluster card stops the background checks for it.
+- **Check all now** contacts every cluster once, on demand.
+- **Settings → Which clusters KubeNova contacts in the background** changes this: *Only clusters I open* (default), *All clusters* (the old behaviour), or *None*.
 
 ## API
 

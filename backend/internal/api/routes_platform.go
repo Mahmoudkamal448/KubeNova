@@ -71,12 +71,34 @@ func (s *Server) rancherCloudRoutes(mux *http.ServeMux) {
 		ok(w, map[string]bool{"ok": true})
 	})
 	mux.HandleFunc("POST /api/rancher/servers/{sid}/sso", func(w http.ResponseWriter, r *http.Request) {
-		rid, url, err := s.Rancher.SSOStart(r.PathValue("sid"))
+		rid, url, err := s.Rancher.SSOStart(r.Context(), r.PathValue("sid"))
 		if err != nil {
 			fail(w, err)
 			return
 		}
 		ok(w, map[string]string{"requestId": rid, "url": url})
+	})
+	mux.HandleFunc("GET /api/rancher/servers/{sid}/providers", func(w http.ResponseWriter, r *http.Request) {
+		ps, err := s.Rancher.AuthProviders(r.Context(), r.PathValue("sid"))
+		if err != nil {
+			fail(w, err)
+			return
+		}
+		ok(w, ps)
+	})
+	// Stores a token: a Rancher API key, or the session token captured by
+	// the in-app login window. The token is validated against Rancher first.
+	mux.HandleFunc("POST /api/rancher/servers/{sid}/token", func(w http.ResponseWriter, r *http.Request) {
+		var b struct{ Token string }
+		if err := decode(r, &b); err != nil {
+			fail(w, err)
+			return
+		}
+		if err := s.Rancher.SetToken(r.Context(), r.PathValue("sid"), b.Token, ""); err != nil {
+			writeJSON(w, http.StatusBadRequest, apiError{Error: err.Error()})
+			return
+		}
+		ok(w, map[string]bool{"ok": true})
 	})
 	mux.HandleFunc("GET /api/rancher/servers/{sid}/sso/{rid}", func(w http.ResponseWriter, r *http.Request) {
 		done, err := s.Rancher.SSOPoll(r.Context(), r.PathValue("sid"), r.PathValue("rid"))
@@ -280,6 +302,7 @@ func (s *Server) enterpriseRoutes(mux *http.ServeMux) {
 		cur := s.Settings.Get()
 		s.Clusters.Proxy = cur.Proxy
 		s.Clusters.SyncInterval = syncInterval(cur.KubeconfigSync)
+		s.Clusters.HealthMode = healthMode(cur.HealthMode)
 		s.Tools.Proxy = cur.Proxy
 		s.Plugins.MarketplaceURL = cur.MarketplaceURL
 		go s.MCP.Sync(context.Background(), cur.MCPServers)
