@@ -33,7 +33,16 @@ const rkey = (r: APIResource) => `${r.group}/${r.version}/${r.resource}`;
 function ResourceSidebar() {
   const { resources, selectedResource, selectResource } = useStore();
   const [filter, setFilter] = useState("");
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({ "Custom Resources": false });
+  // Sections start collapsed; the ones the user opens are remembered.
+  const [open, setOpen] = useState<Record<string, boolean>>(() => {
+    try { return JSON.parse(localStorage.getItem("kubenova.openSections") || "{}"); } catch { return {}; }
+  });
+  const toggle = (sec: string) => {
+    const next = { ...open, [sec]: !isOpen(sec) };
+    setOpen(next);
+    try { localStorage.setItem("kubenova.openSections", JSON.stringify(next)); } catch { /* ignore */ }
+  };
+  const isOpen = (sec: string) => !!filter || (open[sec] ?? false) || (open[sec] === undefined && selectedResource?.section === sec);
   const grouped = useMemo(() => {
     const f = filter.toLowerCase();
     const m = new Map<string, APIResource[]>();
@@ -58,10 +67,10 @@ function ResourceSidebar() {
       {!resources.length && <div className="muted small" style={{ padding: 8 }}>Discovering API resources…</div>}
       {grouped.map(([sec, rs]) => (
         <div key={sec}>
-          <div className="sec" onClick={() => setCollapsed({ ...collapsed, [sec]: !collapsed[sec] })}>
-            <span className="row" style={{ gap: 4 }}>{collapsed[sec] ? <ChevronRight size={12} /> : <ChevronDown size={12} />}{sec}</span><span>{rs.length}</span>
+          <div className="sec" onClick={() => toggle(sec)}>
+            <span className="row" style={{ gap: 4 }}>{isOpen(sec) ? <ChevronDown size={12} /> : <ChevronRight size={12} />}{sec}</span><span>{rs.length}</span>
           </div>
-          {!collapsed[sec] && rs.map((r) => (
+          {isOpen(sec) && rs.map((r) => (
             <div key={rkey(r)} title={`${r.group || "core"}/${r.version}`} className={`item ${selectedResource && rkey(selectedResource) === rkey(r) ? "active" : ""}`} onClick={() => selectResource(r)}>
               <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{r.kind}</span>
               {r.custom && <span className="muted small" style={{ overflow: "hidden", textOverflow: "ellipsis", maxWidth: 90 }}>{r.group.split(".")[0]}</span>}
