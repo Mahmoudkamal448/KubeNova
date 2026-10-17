@@ -41,13 +41,15 @@ The server now shows a yellow **login** badge. The **Authentication** tab shows 
 |---|---|
 | **Username & password** | You log in to Rancher with a local, Active Directory, OpenLDAP or FreeIPA account. Pick the provider from the drop-down. |
 | **API token** | You created a token in Rancher (see "Before you start"). |
-| **Single sign-on** | Your Rancher uses Azure AD, Okta, Keycloak (OIDC or SAML), GitHub, Google, Ping, ADFS or any other provider. Click **Log in with Rancher**: KubeNova opens Rancher's own login page in a KubeNova window. Log in as usual; the window closes on its own and you're logged in. |
+| **Single sign-on** | Your Rancher uses Keycloak, Okta, Azure AD, GitHub, Google, SAML, OIDC or any other provider. Click **Log in with your browser**: Rancher's *Create API Key* page opens in your normal browser, so Cloudflare and other "verify you are human" checks work. Log in, click **Create**, then click the copy button next to **Bearer Token**. KubeNova picks the token up from the clipboard by itself (copying the access key and then the secret key works too). If your Rancher only uses SAML, the browser login is fully automatic and no key is needed. |
 
 ![Rancher login options](images/rancher/04-login.png)
 
 After a successful login, the badge turns green (**auth**).
 
-> **Why a KubeNova window and not my browser?** Rancher's "log in from a CLI through the browser" feature only works with SAML providers. With OIDC (Keycloak OIDC, Okta OIDC, Azure AD, GitHub, Google…) the login works in the browser, but the browser never hands the token back to the app. So KubeNova shows the Rancher login page itself and picks up the session as soon as you're logged in. Your identity provider's own cookies are kept, so the next login is usually a single click.
+> **Why do I create an API key?** Rancher can hand a browser login back to an app only for SAML providers. With OIDC (Keycloak OIDC, Okta OIDC, GitHub, Google…) you can log in in the browser, but Rancher never passes the session to the app. An API key is Rancher's supported way for tools to log in. In Rancher you can give it an expiry date, and you can delete it any time under **Account & API Keys**.
+>
+> **Log in in a KubeNova window instead** opens Rancher's login page inside KubeNova and needs no key. It does not work when Cloudflare, or another bot check, blocks embedded browsers.
 
 ## Step 4: Import all kubeconfigs
 
@@ -116,4 +118,5 @@ The data dir is `~/.config/KubeNova` on Linux, `~/Library/Application Support/Ku
 | `401 Unauthorized` when listing clusters | The token expired or was revoked. Log in again. |
 | A cluster shows *unreachable* after import | The cluster itself is down or disconnected from Rancher (check its state in Rancher). |
 | "Waiting for browser login…" never finishes | You're on an old version, or running KubeNova in a plain browser (not the desktop app) with an OIDC provider. Use **Log in with Rancher** in the desktop app, or paste an API token. |
-| The login window shows an identity-provider error about "embedded browsers" | Use the **API token** option instead. |
+| The KubeNova login window shows a Cloudflare "verify you are human" loop, or an "embedded browsers" error | Use **Log in with your browser**. |
+| KubeNova doesn't pick up the copied key | Copy the **Bearer Token** (not only the access key), or paste it under **API token**. KubeNova watches the clipboard for 15 minutes after you click the button. |

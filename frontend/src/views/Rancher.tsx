@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Download, LogIn, Plus, RefreshCw, Server, SquareTerminal, Trash2 } from "lucide-react";
 import { api, openExternal } from "../api";
 import { useStore } from "../store";
@@ -68,10 +68,14 @@ function Login({ sv, onDone }: { sv: any; onDone: () => void }) {
   const pw = (providers.data || []).filter((p: any) => p.login === "password");
   const sso = (providers.data || []).filter((p: any) => p.login !== "password");
   const hasSaml = sso.some((p: any) => p.login === "browser");
+  const samlOnly = hasSaml && sso.every((p: any) => p.login === "browser");
+  const base = sv.url.replace(/\/$/, "");
   const [f, setF] = useState({ provider: "localProvider", username: "", password: "" });
   const [token, setToken] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const stop = useRef(false);
+  useEffect(() => () => { stop.current = true; }, []);
   useEffect(() => { if (pw.length && !pw.some((p: any) => p.type === f.provider)) setF((x) => ({ ...x, provider: pw[0].type })); }, [providers.data]);
 
   const saveToken = async (t: string) => {
@@ -91,15 +95,47 @@ function Login({ sv, onDone }: { sv: any; onDone: () => void }) {
     } finally { setBusy(false); }
   };
 
-  // Rancher's browser token flow (SAML providers only), used in browser mode.
+  // Your own browser + a Rancher API key: works with every provider, and with
+  // Cloudflare or other bot checks in front of Rancher. Rancher can't hand an
+  // OIDC login back to an app, so the user creates a key and copies it;
+  // KubeNova picks it up from the clipboard.
+  const keyLogin = async () => {
+    openExternal(`${base}/dashboard/account/create-key`);
+    const read = window.kubenova?.rancherClipboard;
+    if (!read) { setStatus("After creating the key in your browser, paste its bearer token under API token."); return; }
+    stop.current = false;
+    setBusy(true);
+    setStatus("In your browser: log in, click Create, then click the copy button next to the Bearer Token. KubeNova picks it up automatically.");
+    const seen = new Set([await read()]);
+    let access = "";
+    const deadline = Date.now() + 15 * 60 * 1000;
+    while (!stop.current && Date.now() < deadline) {
+      await new Promise((res) => setTimeout(res, 1000));
+      const t = await read();
+      if (!t || seen.has(t)) continue;
+      seen.add(t);
+      let full = t.includes(":") ? t : "";
+      if (!full && t.startsWith("token-")) { access = t; setStatus("Got the access key. Now copy the secret key (or the bearer token)."); continue; }
+      if (!full && access) full = `${access}:${t}`;
+      if (!full) continue;
+      setStatus("Checking token…");
+      if (await saveToken(full)) { setBusy(false); setStatus(""); return; }
+      setStatus("Rancher rejected that token. Copy the Bearer Token again.");
+    }
+    setBusy(false);
+    if (!stop.current) setStatus("Stopped waiting. Paste the bearer token under API token.");
+  };
+
+  // Rancher's own browser token flow; fully automatic but SAML providers only.
   const browserLogin = async () => {
     const r = await act(() => api.post(`/rancher/servers/${sv.id}/sso`));
     if (!r) return;
     openExternal(r.url);
+    stop.current = false;
     setBusy(true);
     setStatus("Waiting for you to finish logging in in the browser…");
     const deadline = Date.now() + 15 * 60 * 1000;
-    while (Date.now() < deadline) {
+    while (!stop.current && Date.now() < deadline) {
       await new Promise((res) => setTimeout(res, 3000));
       try {
         const p = await api.get(`/rancher/servers/${sv.id}/sso/${r.requestId}`);
@@ -107,7 +143,7 @@ function Login({ sv, onDone }: { sv: any; onDone: () => void }) {
       } catch (e: any) { setBusy(false); setStatus(`Login failed: ${e.message}`); return; }
     }
     setBusy(false);
-    setStatus("Timed out. If your Rancher uses OIDC, GitHub or Azure AD, use an API token instead.");
+    if (!stop.current) setStatus("Timed out. If your Rancher uses OIDC, GitHub or Azure AD, use “Log in with your browser” without SAML, or an API token.");
   };
 
   return (
@@ -116,13 +152,13 @@ function Login({ sv, onDone }: { sv: any; onDone: () => void }) {
       {providers.data && <div className="row wrap small"><span className="muted">This Rancher offers:</span>{providers.data.map((p: any) => <span key={p.type} className="chip">{providerLabel[p.type] || p.name || p.type}</span>)}</div>}
       <div className="grid g3">
         <div className="card col"><h3>Single sign-on</h3>
-          {window.kubenova?.rancherLogin ? <>
-            <div className="muted small">Opens your Rancher's own login page in a KubeNova window. Works with every provider{sso.length ? `, including ${sso.map((p: any) => providerLabel[p.type] || p.type).join(", ")}` : ""}.</div>
-            <button className="btn primary" disabled={busy} onClick={windowLogin}><LogIn size={13} />Log in with Rancher</button>
-          </> : <>
-            <div className="muted small">{hasSaml ? "Opens your browser (SAML providers: Okta, ADFS, Ping, Keycloak SAML, Shibboleth)." : "In the web version, browser sign-in only works with SAML providers. Use an API token, or the desktop app's Rancher login window."}</div>
-            <button className="btn primary" disabled={busy || !hasSaml} onClick={browserLogin}><LogIn size={13} />Log in with SSO</button>
-          </>}
+          <div className="muted small">{samlOnly
+            ? "Opens your browser; log in there and KubeNova is logged in automatically."
+            : "Opens Rancher in your own browser (works behind Cloudflare). Log in, click Create, then copy the Bearer Token; KubeNova picks it up from the clipboard."}</div>
+          <button className="btn primary" disabled={busy} onClick={samlOnly ? browserLogin : keyLogin}><LogIn size={13} />Log in with your browser</button>
+          {hasSaml && !samlOnly && <button className="btn" disabled={busy} onClick={browserLogin}>SAML login (automatic)</button>}
+          {window.kubenova?.rancherLogin && <button className="btn ghost" disabled={busy} onClick={windowLogin}>Log in in a KubeNova window instead</button>}
+          {busy && <button className="btn ghost sm" onClick={() => { stop.current = true; setBusy(false); setStatus(""); }}>Stop waiting</button>}
           {status && <div className="small">{status}</div>}
         </div>
         <div className="card col"><h3>Username & password</h3>
@@ -137,7 +173,7 @@ function Login({ sv, onDone }: { sv: any; onDone: () => void }) {
           <div className="muted small">In Rancher: your avatar → <b>Account & API Keys</b> → <b>Create API Key</b>, then paste the bearer token.</div>
           <input type="password" placeholder="token-xxxxx:yyyy" value={token} onChange={(e) => setToken(e.target.value)} />
           <div className="row"><button className="btn" disabled={!token} onClick={() => saveToken(token)}>Save token</button>
-            <button className="btn ghost" onClick={() => openExternal(sv.url.replace(/\/$/, "") + "/dashboard/account")}>Open Rancher</button></div>
+            <button className="btn ghost" onClick={() => openExternal(`${base}/dashboard/account/create-key`)}>Create a key in Rancher</button></div>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 // Electron main process: launches the Go backend as a sidecar, passes its
 // URL/token to the renderer and provides a few native integrations.
-import { app, BrowserWindow, ipcMain, shell, dialog, Menu, safeStorage, session } from "electron";
+import { app, BrowserWindow, ipcMain, shell, dialog, Menu, safeStorage, session, clipboard } from "electron";
 import { spawn, ChildProcess } from "node:child_process";
 import path from "node:path";
 import fs from "node:fs";
@@ -86,6 +86,12 @@ ipcMain.handle("backend:info", async () => {
 });
 ipcMain.handle("shell:open", (_e, url: string) => {
   if (/^https?:\/\//.test(url)) return shell.openExternal(url);
+});
+// Used while the user creates a Rancher API key in their browser. Only text
+// shaped like a Rancher token, access key or secret key is passed on.
+ipcMain.handle("rancher:clipboard", () => {
+  const t = clipboard.readText().trim();
+  return /^token-[a-z0-9]+(:[a-z0-9]+)?$/i.test(t) || /^[a-z0-9]{40,64}$/i.test(t) ? t : "";
 });
 ipcMain.handle("dialog:open", async (_e, opts: { directory?: boolean; filters?: { name: string; extensions: string[] }[] }) => {
   const r = await dialog.showOpenDialog({ properties: [opts?.directory ? "openDirectory" : "openFile", "multiSelections"], filters: opts?.filters });
