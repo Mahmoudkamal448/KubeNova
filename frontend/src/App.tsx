@@ -4,6 +4,7 @@ import {
   Settings as SettingsIcon, Shield, Sparkles, SquareTerminal, Wrench, X, Command, Star,
 } from "lucide-react";
 import { initBackend, wsUrl } from "./api";
+import { watchEvents } from "./events";
 import { useStore, type View } from "./store";
 import { Terminal } from "./components/Terminal";
 import { LogViewer } from "./components/LogViewer";
@@ -56,6 +57,7 @@ export function App() {
         await s.loadSettings();
         await s.loadClusters();
         loadPlugins();
+        watchEvents();
         const id = useStore.getState().clusterId;
         if (id && useStore.getState().clusters.some((c) => c.id === id)) s.selectCluster(id);
       }

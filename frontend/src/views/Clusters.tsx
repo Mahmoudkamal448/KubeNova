@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { AlertTriangle, Download, FolderPlus, RefreshCw, Star, Upload, Activity } from "lucide-react";
+import { AlertTriangle, Download, FolderSync, RefreshCw, Star, Upload, Activity } from "lucide-react";
+import { KubeconfigSources } from "./KubeconfigSources";
 import { api, downloadUrl } from "../api";
 import { useStore } from "../store";
 import type { Cluster } from "../types";
@@ -13,6 +14,7 @@ export function ClustersView() {
   const [edit, setEdit] = useState<Cluster | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [sourcesOpen, setSourcesOpen] = useState(false);
   const list = useMemo(() => {
     const lq = q.toLowerCase();
     return s.clusters.filter((c) => (!groupFilter || (groupFilter === "★" ? c.favorite : c.group === groupFilter)) &&
@@ -33,12 +35,6 @@ export function ClustersView() {
     certs: s.clusters.filter((c) => c.health?.certWarning).length,
   }), [s.clusters]);
 
-  const addFiles = async () => {
-    const paths = (await window.kubenova?.openDialog({})) || [prompt("Path to kubeconfig file or directory") || ""];
-    for (const p of paths.filter(Boolean)) await act(() => api.post("/kubeconfigs", { path: p }), "Kubeconfig added");
-    s.loadClusters();
-  };
-
   return (
     <div className="page">
       <h1>Clusters <Badge>{stats.total}</Badge></h1>
@@ -56,7 +52,7 @@ export function ClustersView() {
           {s.groups.map((g) => <option key={g}>{g}</option>)}
         </select>
         <div className="grow" />
-        <button className="btn" onClick={addFiles}><FolderPlus size={14} />Add kubeconfig</button>
+        <button className="btn" onClick={() => setSourcesOpen(true)}><FolderSync size={14} />Kubeconfig sources</button>
         <button className="btn" onClick={() => setImportOpen(true)}><Upload size={14} />Paste kubeconfig</button>
         <a className="btn" href={downloadUrl("/kubeconfigs/merged")} download="kubeconfig-merged.yaml"><Download size={14} />Export merged</a>
         <button className="btn" disabled={busy} onClick={async () => { setBusy(true); await act(() => api.post("/clusters/health")); await s.loadClusters(); setBusy(false); }}>
@@ -64,7 +60,7 @@ export function ClustersView() {
         </button>
         <button className="btn" onClick={async () => { await api.post("/clusters/reload"); s.loadClusters(); }}><RefreshCw size={14} /></button>
       </div>
-      {!s.clusters.length && <Empty>No clusters found. Add a kubeconfig, paste one, or import from Rancher / a cloud provider.</Empty>}
+      {!s.clusters.length && <Empty>No clusters found. Sync a folder of kubeconfigs (<a href="#" onClick={(e) => { e.preventDefault(); setSourcesOpen(true); }}>Kubeconfig sources</a>), paste one, or import from Rancher / a cloud provider.</Empty>}
       {groups.map(([g, cs]) => (
         <div key={g}>
           <h2>{g} <span className="muted">({cs.length})</span></h2>
@@ -75,6 +71,7 @@ export function ClustersView() {
       ))}
       {edit && <EditCluster c={edit} onClose={() => setEdit(null)} />}
       {importOpen && <ImportKubeconfig onClose={() => setImportOpen(false)} />}
+      {sourcesOpen && <KubeconfigSources onClose={() => setSourcesOpen(false)} />}
     </div>
   );
 }

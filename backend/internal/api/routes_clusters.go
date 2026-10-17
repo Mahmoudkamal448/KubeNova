@@ -100,7 +100,65 @@ func (s *Server) clusterRoutes(mux *http.ServeMux) {
 	})
 	// kubeconfig sources
 	mux.HandleFunc("GET /api/kubeconfigs", func(w http.ResponseWriter, r *http.Request) {
-		ok(w, map[string]any{"sources": s.Clusters.Sources(), "importDir": s.Clusters.ImportDir()})
+		ok(w, map[string]any{"sources": s.Clusters.Sources(), "importDir": s.Clusters.ImportDir(), "status": s.Clusters.Status()})
+	})
+	mux.HandleFunc("POST /api/kubeconfigs/dirs", func(w http.ResponseWriter, r *http.Request) {
+		var d clusters.SyncDir
+		if err := decode(r, &d); err != nil {
+			fail(w, err)
+			return
+		}
+		if err := s.Clusters.AddSyncDir(d); err != nil {
+			fail(w, err)
+			return
+		}
+		ok(w, s.Clusters.Status())
+	})
+	mux.HandleFunc("DELETE /api/kubeconfigs/dirs", func(w http.ResponseWriter, r *http.Request) {
+		if err := s.Clusters.RemoveSyncDir(q(r, "path")); err != nil {
+			fail(w, err)
+			return
+		}
+		ok(w, s.Clusters.Status())
+	})
+	mux.HandleFunc("POST /api/kubeconfigs/sync", func(w http.ResponseWriter, r *http.Request) {
+		s.Clusters.Reload()
+		ok(w, s.Clusters.Status())
+	})
+	// Live events: the UI refreshes its cluster list when sources change.
+	mux.HandleFunc("GET /api/events", func(w http.ResponseWriter, r *http.Request) {
+		conn, err := s.upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+		ch, unsub := s.Clusters.Subscribe()
+		defer unsub()
+		gone := make(chan struct{})
+		go func() {
+			defer close(gone)
+			for {
+				if _, _, err := conn.ReadMessage(); err != nil {
+					return
+				}
+			}
+		}()
+		ping := time.NewTicker(30 * time.Second)
+		defer ping.Stop()
+		for {
+			select {
+			case <-gone:
+				return
+			case <-ch:
+				if conn.WriteJSON(map[string]string{"type": "clusters"}) != nil {
+					return
+				}
+			case <-ping.C:
+				if conn.WriteJSON(map[string]string{"type": "ping"}) != nil {
+					return
+				}
+			}
+		}
 	})
 	mux.HandleFunc("POST /api/kubeconfigs", func(w http.ResponseWriter, r *http.Request) {
 		var b struct{ Path string }

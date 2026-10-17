@@ -279,6 +279,7 @@ func (s *Server) enterpriseRoutes(mux *http.ServeMux) {
 		}
 		cur := s.Settings.Get()
 		s.Clusters.Proxy = cur.Proxy
+		s.Clusters.SyncInterval = syncInterval(cur.KubeconfigSync)
 		s.Tools.Proxy = cur.Proxy
 		s.Plugins.MarketplaceURL = cur.MarketplaceURL
 		go s.MCP.Sync(context.Background(), cur.MCPServers)

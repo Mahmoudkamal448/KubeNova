@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"k8s.io/client-go/discovery"
@@ -62,6 +63,7 @@ type Meta struct {
 
 type persisted struct {
 	Sources []string           `json:"sources"`
+	Dirs    []SyncDir          `json:"dirs,omitempty"`
 	Meta    map[string]*Meta   `json:"meta"`
 	Health  map[string]*Health `json:"health"`
 }
@@ -83,6 +85,15 @@ type Manager struct {
 	raw      map[string]*clientcmdapi.Config // source path -> parsed kubeconfig
 	clients  map[string]*clientSet
 	Proxy    string
+
+	// SyncInterval is how often kubeconfig sources are rescanned (default 3s).
+	SyncInterval time.Duration
+	lastScan     time.Time
+	stamps       map[string]stamp
+	sourceStatus []SourceStatus
+	loaded       atomic.Bool
+	subMu        sync.Mutex
+	subs         map[chan struct{}]struct{}
 }
 
 // NewManager loads persisted state and scans all kubeconfig sources.
@@ -92,6 +103,7 @@ func NewManager(st *store.Store) (*Manager, error) {
 		clusters: map[string]*Cluster{},
 		raw:      map[string]*clientcmdapi.Config{},
 		clients:  map[string]*clientSet{},
+		subs:     map[chan struct{}]struct{}{},
 	}
 	if err := st.Load("clusters", &m.state); err != nil {
 		return nil, err
@@ -113,70 +125,28 @@ func NewManager(st *store.Store) (*Manager, error) {
 // pasted by the user are stored.
 func (m *Manager) ImportDir() string { return filepath.Join(m.st.Dir(), "kubeconfigs") }
 
-// DefaultSources returns kubeconfig files discovered from KUBECONFIG, ~/.kube
-// and the import directory.
-func (m *Manager) DefaultSources() []string {
-	var out []string
-	if env := os.Getenv("KUBECONFIG"); env != "" {
-		out = append(out, filepath.SplitList(env)...)
-	}
-	if home, err := os.UserHomeDir(); err == nil {
-		out = append(out, filepath.Join(home, ".kube", "config"))
-		if entries, err := os.ReadDir(filepath.Join(home, ".kube", "configs")); err == nil {
-			for _, e := range entries {
-				if !e.IsDir() {
-					out = append(out, filepath.Join(home, ".kube", "configs", e.Name()))
-				}
-			}
-		}
-	}
-	if entries, err := os.ReadDir(m.ImportDir()); err == nil {
-		for _, e := range entries {
-			if !e.IsDir() {
-				out = append(out, filepath.Join(m.ImportDir(), e.Name()))
-			}
-		}
-	}
-	return out
-}
-
-// Sources returns every kubeconfig source (default and user-added).
+// Sources returns every kubeconfig file currently loaded or watched.
 func (m *Manager) Sources() []string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	return m.allSourcesLocked()
-}
-
-func (m *Manager) allSourcesLocked() []string {
-	seen := map[string]bool{}
 	var out []string
-	for _, s := range append(m.DefaultSources(), m.state.Sources...) {
-		if s == "" || seen[s] {
-			continue
-		}
-		seen[s] = true
-		out = append(out, s)
+	for _, src := range m.collectSourcesLocked() {
+		out = append(out, src.path)
 	}
 	return out
 }
 
-// AddSource registers an additional kubeconfig file or directory.
+// AddSource registers a kubeconfig file, or starts syncing a directory.
 func (m *Manager) AddSource(path string) error {
 	info, err := os.Stat(path)
 	if err != nil {
 		return err
 	}
-	m.mu.Lock()
 	if info.IsDir() {
-		entries, _ := os.ReadDir(path)
-		for _, e := range entries {
-			if !e.IsDir() {
-				m.state.Sources = append(m.state.Sources, filepath.Join(path, e.Name()))
-			}
-		}
-	} else {
-		m.state.Sources = append(m.state.Sources, path)
+		return m.AddSyncDir(SyncDir{Path: path})
 	}
+	m.mu.Lock()
+	m.state.Sources = append(m.state.Sources, filepath.Clean(path))
 	m.mu.Unlock()
 	if err := m.save(); err != nil {
 		return err
@@ -185,8 +155,10 @@ func (m *Manager) AddSource(path string) error {
 	return nil
 }
 
-// RemoveSource unregisters a kubeconfig source. Imported files are deleted.
+// RemoveSource unregisters a kubeconfig file. Imported files are deleted.
+// Files that come from a synced folder cannot be removed individually.
 func (m *Manager) RemoveSource(path string) error {
+	path = filepath.Clean(path)
 	m.mu.Lock()
 	var kept []string
 	for _, s := range m.state.Sources {
@@ -194,9 +166,20 @@ func (m *Manager) RemoveSource(path string) error {
 			kept = append(kept, s)
 		}
 	}
+	explicit := len(kept) != len(m.state.Sources)
 	m.state.Sources = kept
+	var syncedFrom string
+	for _, d := range m.state.Dirs {
+		if strings.HasPrefix(path, filepath.Clean(d.Path)+string(os.PathSeparator)) {
+			syncedFrom = d.Path
+		}
+	}
 	m.mu.Unlock()
-	if strings.HasPrefix(path, m.ImportDir()) {
+	imported := strings.HasPrefix(path, m.ImportDir())
+	if syncedFrom != "" && !explicit && !imported {
+		return fmt.Errorf("%s comes from the synced folder %s: delete the file there, or stop syncing the folder", path, syncedFrom)
+	}
+	if imported {
 		_ = os.Remove(path)
 	}
 	if err := m.save(); err != nil {
@@ -254,21 +237,67 @@ func (m *Manager) SetDefaultGroup(source, group string) error {
 	return nil
 }
 
-// Reload rescans every kubeconfig source.
+// Reload rescans every kubeconfig source and notifies subscribers. Clusters
+// that were not known before get a health check in the background (except on
+// the very first load, which the periodic health loop covers).
 func (m *Manager) Reload() {
+	fresh := m.reloadLocked()
+	m.notify()
+	if m.loaded.Swap(true) && len(fresh) > 0 {
+		go m.checkNew(context.Background(), fresh)
+	}
+}
+
+func (m *Manager) reloadLocked() (fresh []string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	previous := m.clusters
+	defer func() {
+		for id := range m.clusters {
+			if _, ok := previous[id]; !ok {
+				fresh = append(fresh, id)
+			}
+		}
+	}()
+	srcs := m.collectSourcesLocked()
+	newStamps := stampsOf(srcs)
 	m.clusters = map[string]*Cluster{}
 	m.raw = map[string]*clientcmdapi.Config{}
-	for _, src := range m.allSourcesLocked() {
-		cfg, err := clientcmd.LoadFromFile(src)
-		if err != nil {
+	m.sourceStatus = nil
+	for _, src := range srcs {
+		st := SourceStatus{Path: src.path, Origin: src.origin}
+		if src.dir != nil {
+			st.Dir = src.dir.Path
+		}
+		if s, ok := newStamps[src.path]; ok {
+			st.ModTime = s.mod
+		} else {
+			// Missing explicit files are reported; missing defaults are not.
+			if src.origin == "file" || src.origin == "kubeconfig-env" {
+				st.Error = "file not found"
+				m.sourceStatus = append(m.sourceStatus, st)
+			}
 			continue
 		}
-		m.raw[src] = cfg
+		cfg, err := clientcmd.LoadFromFile(src.path)
+		if err != nil {
+			// In synced folders, only report files that look like kubeconfigs.
+			if src.origin != "synced" || looksLikeKubeconfig(src.path) {
+				st.Error = err.Error()
+				m.sourceStatus = append(m.sourceStatus, st)
+			}
+			continue
+		}
+		if src.origin == "synced" && len(cfg.Contexts) == 0 && len(cfg.Clusters) == 0 && len(cfg.AuthInfos) == 0 {
+			continue // some other YAML/JSON file
+		}
+		st.Contexts = len(cfg.Contexts)
+		m.sourceStatus = append(m.sourceStatus, st)
+		m.raw[src.path] = cfg
+		group := defaultGroup(src.dir, src.path)
 		for ctxName, ctx := range cfg.Contexts {
-			id := ClusterID(src, ctxName)
-			c := &Cluster{ID: id, Name: ctxName, Context: ctxName, Source: src, User: ctx.AuthInfo, Namespace: ctx.Namespace}
+			id := ClusterID(src.path, ctxName)
+			c := &Cluster{ID: id, Name: ctxName, Context: ctxName, Source: src.path, User: ctx.AuthInfo, Namespace: ctx.Namespace, Group: group}
 			if cl, ok := cfg.Clusters[ctx.Cluster]; ok {
 				c.Server = cl.Server
 			}
@@ -279,18 +308,35 @@ func (m *Manager) Reload() {
 				if meta.Alias != "" {
 					c.Name = meta.Alias
 				}
-				c.Group, c.Favorite, c.Color, c.Tags, c.LastOpened = meta.Group, meta.Favorite, meta.Color, meta.Tags, meta.LastOpened
+				if meta.Group != "" {
+					c.Group = meta.Group
+				}
+				c.Favorite, c.Color, c.Tags, c.LastOpened = meta.Favorite, meta.Color, meta.Tags, meta.LastOpened
 			}
 			c.Health = m.state.Health[id]
 			m.clusters[id] = c
 		}
 	}
-	// Drop cached clients for clusters which no longer exist.
+	// Drop cached clients for clusters that disappeared or whose kubeconfig
+	// changed (e.g. a rotated token or a new server address).
 	for id := range m.clients {
-		if _, ok := m.clusters[id]; !ok {
+		c, ok := m.clusters[id]
+		if !ok || newStamps[c.Source] != m.stamps[c.Source] {
 			delete(m.clients, id)
 		}
 	}
+	m.stamps = newStamps
+	m.lastScan = time.Now()
+	return fresh
+}
+
+func looksLikeKubeconfig(path string) bool {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return false
+	}
+	t := string(b)
+	return strings.Contains(t, "clusters:") || strings.Contains(t, "contexts:") || strings.Contains(t, "kind: Config") || strings.Contains(t, `"kind": "Config"`)
 }
 
 func authType(ai *clientcmdapi.AuthInfo) string {

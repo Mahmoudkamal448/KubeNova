@@ -27,6 +27,7 @@ type Settings struct {
 	PageSize         int                 `json:"pageSize"`
 	MarketplaceURL   string              `json:"marketplaceUrl"`
 	DefaultNamespace string              `json:"defaultNamespace"`
+	KubeconfigSync   int                 `json:"kubeconfigSyncSeconds"`
 }
 
 // Defaults returns default settings.
@@ -37,6 +38,7 @@ func Defaults() Settings {
 		HealthInterval: 120,
 		HealthWorkers:  16,
 		PageSize:       500,
+		KubeconfigSync: 3,
 		MarketplaceURL: "https://raw.githubusercontent.com/mahmoudkamal448/infrastructue-rebo/main/marketplace/index.json",
 		Shortcuts: map[string]string{
 			"palette": "Mod+K", "search": "Mod+Shift+F", "terminal": "Mod+`", "ai": "Mod+I",

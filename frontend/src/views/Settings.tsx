@@ -54,6 +54,7 @@ export function SettingsView() {
           <Field label="Theme"><select value={s.theme} onChange={(e) => s.setTheme(e.target.value)}><option value="dark">Dark</option><option value="light">Light</option><option value="system">System</option></select></Field>
           <Field label="List page size (lazy loading)"><input type="number" value={st.pageSize} onChange={(e) => set("pageSize", +e.target.value)} /></Field>
           <Field label="Background health check interval (s)"><input type="number" value={st.healthIntervalSeconds} onChange={(e) => set("healthIntervalSeconds", +e.target.value)} /></Field>
+          <Field label="Kubeconfig folder sync interval (s)"><input type="number" min={1} value={st.kubeconfigSyncSeconds || 3} onChange={(e) => set("kubeconfigSyncSeconds", +e.target.value)} /></Field>
           <Field label="Health check workers (parallel clusters)"><input type="number" value={st.healthWorkers} onChange={(e) => set("healthWorkers", +e.target.value)} /></Field>
           <Field label="Terminal shell"><input value={st.shell || ""} onChange={(e) => set("shell", e.target.value)} placeholder="default login shell" /></Field>
           <Field label="Working directory"><input value={st.workdir || ""} onChange={(e) => set("workdir", e.target.value)} /></Field>

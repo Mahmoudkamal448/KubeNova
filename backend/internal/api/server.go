@@ -129,7 +129,16 @@ func (s *Server) Start(ctx context.Context) {
 		workers = 16
 	}
 	s.Clusters.StartBackgroundHealth(ctx, interval, workers)
+	s.Clusters.SyncInterval = syncInterval(cfg.KubeconfigSync)
+	s.Clusters.StartSync(ctx)
 	go s.MCP.Sync(ctx, cfg.MCPServers)
+}
+
+func syncInterval(seconds int) time.Duration {
+	if seconds <= 0 {
+		seconds = 3
+	}
+	return time.Duration(seconds) * time.Second
 }
 
 // ---------- helpers ----------
