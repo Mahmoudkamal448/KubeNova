@@ -92,7 +92,10 @@ export async function browserLogin(opts: { url: string; profile: string; isValid
     await call(sock, "Target.createTarget", { url: loginUrl });
   } else {
     try { fs.rmSync(path.join(opts.profile, "DevToolsActivePort")); } catch { /* none */ }
-    proc = spawn(exe, [`--user-data-dir=${opts.profile}`, "--remote-debugging-port=0", "--remote-allow-origins=http://127.0.0.1", "--no-first-run", "--no-default-browser-check", "--new-window", loginUrl], { stdio: "ignore", detached: false });
+    proc = spawn(exe, [`--user-data-dir=${opts.profile}`, "--remote-debugging-port=0", "--remote-allow-origins=http://127.0.0.1",
+      // Without this the debugging port makes Chrome report navigator.webdriver
+      // = true, and Cloudflare Turnstile then fails ("Verification failed").
+      "--disable-blink-features=AutomationControlled", "--no-first-run", "--no-default-browser-check", "--new-window", loginUrl], { stdio: "ignore", detached: false });
     proc.on("exit", () => { proc = null; ws?.close(); ws = null; });
     sock = await connect(opts.profile);
   }
