@@ -381,6 +381,10 @@ func (s *Service) ImportKubeconfigs(ctx context.Context, id string, clusterIDs [
 		if err != nil {
 			return paths, err
 		}
+		// Keep each Rancher server's clusters together in the cluster list.
+		if err := s.Kube.SetDefaultGroup(p, "Rancher: "+sv.Name); err != nil {
+			return paths, err
+		}
 		paths = append(paths, p)
 	}
 	return paths, nil

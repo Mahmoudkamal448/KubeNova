@@ -118,7 +118,9 @@ function ClusterManage({ sv, c, onClose }: { sv: any; c: any; onClose: () => voi
   const nodes = useAsync(() => (tab === "nodes" ? api.get(`/rancher/servers/${sv.id}/clusters/${c.id}/nodes`) : Promise.resolve(null)), [tab]);
   const apps = useAsync(() => (tab === "apps" ? api.get(`/rancher/servers/${sv.id}/clusters/${c.id}/apps`) : Promise.resolve(null)), [tab]);
   const [nsList, setNsList] = useState<Record<string, string[]>>({});
-  const imported = s.clusters.find((x) => x.source.includes(`rancher-${sv.name}-${c.id}`));
+  // Must match the file name the backend gives imported kubeconfigs (/, \\, : and spaces become "-").
+  const importedName = `rancher-${sv.name}-${c.id}`.replace(/[/\\: ]/g, "-");
+  const imported = s.clusters.find((x) => x.source.replace(/\\/g, "/").split("/").pop() === importedName + ".yaml");
   return (
     <div className="drawer">
       <div className="drawer-head"><b className="grow">{c.name}</b>

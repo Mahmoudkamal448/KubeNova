@@ -100,7 +100,7 @@ marketplace/index.json   marketplace index
 docs/                    architecture, plugin SDK, enterprise
 ```
 
-See [docs/architecture.md](docs/architecture.md) and [docs/enterprise.md](docs/enterprise.md).
+See [docs/architecture.md](docs/architecture.md), [docs/enterprise.md](docs/enterprise.md) and the step-by-step guide [Import all your clusters from Rancher](docs/rancher.md).
 
 ## License
 

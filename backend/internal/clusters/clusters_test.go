@@ -75,4 +75,16 @@ func TestMultipleKubeconfigsAndMerge(t *testing.T) {
 	if len(m.List("")) != 3 {
 		t.Fatal("import not registered")
 	}
+	gamma := m.List("gamma")[0]
+	if err := m.SetDefaultGroup(gamma.Source, "Rancher: corp"); err != nil {
+		t.Fatal(err)
+	}
+	if g := m.List("gamma")[0].Group; g != "Rancher: corp" {
+		t.Fatalf("default group not applied: %q", g)
+	}
+	// An existing group must not be overwritten.
+	_ = m.SetDefaultGroup(m.List("Alpha")[0].Source, "Rancher: corp")
+	if g := m.List("Alpha")[0].Group; g != "prod" {
+		t.Fatalf("user group overwritten: %q", g)
+	}
 }

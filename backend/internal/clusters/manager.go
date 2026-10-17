@@ -229,6 +229,31 @@ func (m *Manager) ImportKubeconfig(name string, data []byte) (string, error) {
 	return p, nil
 }
 
+// SetDefaultGroup puts every context from a kubeconfig source into group,
+// leaving clusters the user already grouped untouched.
+func (m *Manager) SetDefaultGroup(source, group string) error {
+	m.mu.Lock()
+	for id, c := range m.clusters {
+		if c.Source != source {
+			continue
+		}
+		meta := m.state.Meta[id]
+		if meta == nil {
+			meta = &Meta{}
+			m.state.Meta[id] = meta
+		}
+		if meta.Group == "" {
+			meta.Group = group
+		}
+	}
+	m.mu.Unlock()
+	if err := m.save(); err != nil {
+		return err
+	}
+	m.Reload()
+	return nil
+}
+
 // Reload rescans every kubeconfig source.
 func (m *Manager) Reload() {
 	m.mu.Lock()

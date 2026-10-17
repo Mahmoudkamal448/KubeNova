@@ -29,6 +29,8 @@ button { font: inherit; }
 .content { overflow: hidden; display: flex; min-height: 0; }
 .page { flex: 1; overflow: auto; padding: 16px 20px; min-width: 0; }
 .page h1 { font-size: 18px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+.page h1 .btn, .page h1 .badge, .page h1 input, .page h1 select { font-size: 13px; font-weight: 500; }
+.page h1 .badge { font-size: 11px; }
 .page h2 { font-size: 14px; margin: 18px 0 8px; color: var(--fg2); text-transform: uppercase; letter-spacing: .04em; }
 .row { display: flex; align-items: center; gap: 8px; }
 .row.wrap { flex-wrap: wrap; }
