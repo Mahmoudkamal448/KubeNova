@@ -3,6 +3,7 @@
 import { app, BrowserWindow, ipcMain, shell, dialog, Menu, safeStorage, session, clipboard } from "electron";
 import { spawn, ChildProcess } from "node:child_process";
 import path from "node:path";
+import { browserLogin } from "./ssoBrowser";
 import fs from "node:fs";
 
 let backend: ChildProcess | null = null;
@@ -87,6 +88,30 @@ ipcMain.handle("backend:info", async () => {
 ipcMain.handle("shell:open", (_e, url: string) => {
   if (/^https?:\/\//.test(url)) return shell.openExternal(url);
 });
+// Rancher SSO in the user's own Chrome/Edge/Brave (see ssoBrowser.ts). The
+// session token is saved through the backend, which also validates it.
+let ssoSignal = { cancelled: false };
+ipcMain.handle("rancher:browserLogin", async (_e, opts: { url: string; serverId: string }) => {
+  ssoSignal.cancelled = true;
+  const signal = (ssoSignal = { cancelled: false });
+  const isValid = async (token: string) => {
+    if (!backendInfo) return false;
+    const r = await fetch(`${backendInfo.url}/api/rancher/servers/${encodeURIComponent(opts.serverId)}/token`, {
+      method: "POST",
+      headers: { "X-KubeNova-Token": backendInfo.token, "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+    return r.ok;
+  };
+  try {
+    const r = await browserLogin({ url: opts.url, profile: path.join(app.getPath("userData"), "sso-browser"), isValid, signal });
+    return r.token ? { ok: true } : r;
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+});
+ipcMain.handle("rancher:browserLoginCancel", () => { ssoSignal.cancelled = true; });
+
 // Used while the user creates a Rancher API key in their browser. Only text
 // shaped like a Rancher token, access key or secret key is passed on.
 ipcMain.handle("rancher:clipboard", () => {

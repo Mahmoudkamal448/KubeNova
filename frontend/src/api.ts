@@ -8,6 +8,8 @@ declare global {
       encrypt: (s: string) => Promise<string>;
       decrypt: (s: string) => Promise<string>;
       rancherLogin?: (opts: { url: string; insecure?: boolean }) => Promise<{ token?: string; cancelled?: boolean }>;
+      rancherBrowserLogin?: (opts: { url: string; serverId: string }) => Promise<{ ok?: boolean; cancelled?: boolean; noBrowser?: boolean; error?: string }>;
+      rancherBrowserLoginCancel?: () => Promise<void>;
       rancherClipboard?: () => Promise<string>;
       platform: string;
     };

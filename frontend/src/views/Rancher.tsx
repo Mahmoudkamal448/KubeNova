@@ -95,6 +95,19 @@ function Login({ sv, onDone }: { sv: any; onDone: () => void }) {
     } finally { setBusy(false); }
   };
 
+  // Real SSO in the user's own Chrome / Edge / Brave (desktop app).
+  const ssoLogin = async () => {
+    stop.current = false;
+    setBusy(true);
+    setStatus("Log in to Rancher in the browser window that just opened. KubeNova continues automatically.");
+    try {
+      const r = await window.kubenova!.rancherBrowserLogin!({ url: sv.url, serverId: sv.id });
+      if (r.ok) { setStatus(""); useStore.getState().notify("Logged in to Rancher", "ok"); onDone(); return; }
+      if (r.noBrowser) { setBusy(false); setStatus("No Chrome, Edge, Brave or Chromium found. Using an API key instead…"); return keyLogin(); }
+      setStatus(r.error ? `Login failed: ${r.error}` : stop.current ? "" : "The browser was closed before logging in.");
+    } finally { setBusy(false); }
+  };
+
   // Your own browser + a Rancher API key: works with every provider, and with
   // Cloudflare or other bot checks in front of Rancher. Rancher can't hand an
   // OIDC login back to an app, so the user creates a key and copies it;
@@ -152,13 +165,18 @@ function Login({ sv, onDone }: { sv: any; onDone: () => void }) {
       {providers.data && <div className="row wrap small"><span className="muted">This Rancher offers:</span>{providers.data.map((p: any) => <span key={p.type} className="chip">{providerLabel[p.type] || p.name || p.type}</span>)}</div>}
       <div className="grid g3">
         <div className="card col"><h3>Single sign-on</h3>
-          <div className="muted small">{samlOnly
-            ? "Opens your browser; log in there and KubeNova is logged in automatically."
-            : "Opens Rancher in your own browser (works behind Cloudflare). Log in, click Create, then copy the Bearer Token; KubeNova picks it up from the clipboard."}</div>
-          <button className="btn primary" disabled={busy} onClick={samlOnly ? browserLogin : keyLogin}><LogIn size={13} />Log in with your browser</button>
+          {window.kubenova?.rancherBrowserLogin ? <>
+            <div className="muted small">Opens Rancher in Chrome, Edge or Brave (its own KubeNova profile). Log in with {sso.length ? sso.map((p: any) => providerLabel[p.type] || p.type).join(" / ") : "your SSO provider"} as usual; KubeNova picks up the session automatically. Works behind Cloudflare.</div>
+            <button className="btn primary" disabled={busy} onClick={ssoLogin}><LogIn size={13} />Log in with your browser</button>
+          </> : <>
+            <div className="muted small">{samlOnly
+              ? "Opens your browser; log in there and KubeNova is logged in automatically."
+              : "Opens Rancher in your own browser. Log in, click Create, then copy the Bearer Token; KubeNova picks it up from the clipboard."}</div>
+            <button className="btn primary" disabled={busy} onClick={samlOnly ? browserLogin : keyLogin}><LogIn size={13} />Log in with your browser</button>
+          </>}
           {hasSaml && !samlOnly && <button className="btn" disabled={busy} onClick={browserLogin}>SAML login (automatic)</button>}
           {window.kubenova?.rancherLogin && <button className="btn ghost" disabled={busy} onClick={windowLogin}>Log in in a KubeNova window instead</button>}
-          {busy && <button className="btn ghost sm" onClick={() => { stop.current = true; setBusy(false); setStatus(""); }}>Stop waiting</button>}
+          {busy && <button className="btn ghost sm" onClick={() => { stop.current = true; window.kubenova?.rancherBrowserLoginCancel?.(); setBusy(false); setStatus(""); }}>Stop waiting</button>}
           {status && <div className="small">{status}</div>}
         </div>
         <div className="card col"><h3>Username & password</h3>

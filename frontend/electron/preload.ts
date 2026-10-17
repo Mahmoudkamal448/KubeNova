@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld("kubenova", {
   encrypt: (s: string) => ipcRenderer.invoke("secure:encrypt", s),
   decrypt: (s: string) => ipcRenderer.invoke("secure:decrypt", s),
   rancherLogin: (opts: { url: string; insecure?: boolean }) => ipcRenderer.invoke("rancher:login", opts),
+  rancherBrowserLogin: (opts: { url: string; serverId: string }) => ipcRenderer.invoke("rancher:browserLogin", opts),
+  rancherBrowserLoginCancel: () => ipcRenderer.invoke("rancher:browserLoginCancel"),
   rancherClipboard: () => ipcRenderer.invoke("rancher:clipboard"),
   platform: process.platform,
 });
