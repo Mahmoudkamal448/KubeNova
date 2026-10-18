@@ -20,9 +20,12 @@ export function ClustersView() {
     return s.clusters.filter((c) => (!groupFilter || (groupFilter === "★" ? c.favorite : c.group === groupFilter)) &&
       (!lq || `${c.name} ${c.server} ${c.group} ${(c.tags || []).join(" ")} ${c.health?.distribution || ""}`.toLowerCase().includes(lq)));
   }, [s.clusters, q, groupFilter]);
+  // Clusters you've connected to are shown together at the top.
+  const connected = useMemo(() => list.filter((c) => c.connected), [list]);
   const groups = useMemo(() => {
     const m = new Map<string, Cluster[]>();
     for (const c of list) {
+      if (c.connected) continue;
       const g = c.group || "Ungrouped";
       m.set(g, [...(m.get(g) || []), c]);
     }
@@ -64,6 +67,14 @@ export function ClustersView() {
         <button className="btn" onClick={async () => { await api.post("/clusters/reload"); s.loadClusters(); }}><RefreshCw size={14} /></button>
       </div>
       {!s.clusters.length && <Empty>No clusters found. Sync a folder of kubeconfigs (<a href="#" onClick={(e) => { e.preventDefault(); setSourcesOpen(true); }}>Kubeconfig sources</a>), paste one, or import from Rancher / a cloud provider.</Empty>}
+      {connected.length > 0 && (
+        <div>
+          <h2><span className="dot healthy" style={{ marginRight: 6 }} />Connected <span className="muted">({connected.length})</span></h2>
+          <div className="grid g3">
+            {connected.map((c) => <ClusterCard key={c.id} c={c} showGroup onEdit={() => setEdit(c)} />)}
+          </div>
+        </div>
+      )}
       {groups.map(([g, cs]) => (
         <div key={g}>
           <h2>{g} <span className="muted">({cs.length})</span></h2>
@@ -79,7 +90,7 @@ export function ClustersView() {
   );
 }
 
-function ClusterCard({ c, onEdit }: { c: Cluster; onEdit: () => void }) {
+function ClusterCard({ c, onEdit, showGroup }: { c: Cluster; onEdit: () => void; showGroup?: boolean }) {
   const s = useStore();
   const h = c.health;
   const active = s.clusterId === c.id;
@@ -98,6 +109,7 @@ function ClusterCard({ c, onEdit }: { c: Cluster; onEdit: () => void }) {
       <div className="row wrap" style={{ marginTop: 6 }}>
         {h?.version && <Badge kind="info">{h.version}</Badge>}
         {h?.distribution && <Badge>{h.distribution}</Badge>}
+        {showGroup && c.group && <Badge>{c.group}</Badge>}
         <Badge>{c.authType}</Badge>
         {c.connected ? <Badge kind="ok">connected</Badge> : <Badge>not connected</Badge>}
         {c.connected && h && h.status !== "unknown" && <Badge kind={h.latencyMs > 500 ? "warn" : ""}>{h.latencyMs} ms</Badge>}

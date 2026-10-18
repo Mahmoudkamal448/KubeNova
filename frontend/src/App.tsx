@@ -120,6 +120,7 @@ function Shell({ cluster, palette, setPalette }: { cluster: ReturnType<typeof us
       <header className="topbar">
         <select value={s.clusterId} onChange={(e) => s.selectCluster(e.target.value)} style={{ minWidth: 220, maxWidth: 320 }}>
           <option value="">Select cluster…</option>
+          {s.clusters.some((c) => c.connected) && <optgroup label="Connected">{s.clusters.filter((c) => c.connected).map((c) => <option key={"c" + c.id} value={c.id}>{c.name}</option>)}</optgroup>}
           {s.recent.length > 0 && <optgroup label="Recent">{s.recent.map((c) => <option key={"r" + c.id} value={c.id}>{c.name}</option>)}</optgroup>}
           <optgroup label="All clusters">{s.clusters.map((c) => <option key={c.id} value={c.id}>{c.favorite ? "★ " : ""}{c.name}</option>)}</optgroup>
         </select>
