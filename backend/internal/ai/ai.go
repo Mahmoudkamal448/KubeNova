@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/anthropics/anthropic-sdk-go"
@@ -133,6 +134,9 @@ func (a *Assistant) Ask(ctx context.Context, r Request, onStep func(Step)) (*Ans
 }
 
 func (a *Assistant) askClaude(ctx context.Context, st Settings, r Request, tools []Tool, onStep func(Step)) (*Answer, error) {
+	if st.APIKey == "" && st.BaseURL == "" && os.Getenv("ANTHROPIC_API_KEY") == "" {
+		return nil, errors.New("the AI assistant needs an Anthropic API key: create one at https://console.anthropic.com/settings/keys and paste it in Settings → AI. To use a local model instead (Ollama, vLLM), choose \"Local / self-hosted model\" as the Provider there")
+	}
 	opts := []option.RequestOption{}
 	if st.APIKey != "" {
 		opts = append(opts, option.WithAPIKey(st.APIKey))
