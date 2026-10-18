@@ -6,11 +6,13 @@ package metrics
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -49,6 +51,14 @@ type Endpoint struct {
 type Service struct {
 	Clusters *clusters.Manager
 	Store    *store.Store
+	mu       sync.Mutex
+	detected map[string]bool // clusters auto-detected this session
+}
+
+type notConfigured struct{ kind string }
+
+func (e *notConfigured) Error() string {
+	return fmt.Sprintf("no %s found in this cluster. Open Monitoring → Data sources to enter its address", e.kind)
 }
 
 func (s *Service) endpoints(clusterID string) map[string]Endpoint {
@@ -81,29 +91,57 @@ var wellKnown = map[string][][3]string{
 	Grafana:         {{"monitoring", "grafana", "80"}, {"monitoring", "kube-prometheus-stack-grafana", "80"}, {"cattle-monitoring-system", "rancher-monitoring-grafana", "80"}},
 }
 
-// AutoDetect probes well known in-cluster services and stores what it finds.
+// AutoDetect finds observability backends in the cluster and stores them.
+// It looks at every Service it may list (any namespace, any release name)
+// and falls back to well-known names when it can't list cluster-wide.
+// Endpoints the user configured are kept.
 func (s *Service) AutoDetect(ctx context.Context, clusterID string) (map[string]Endpoint, error) {
 	typed, err := s.Clusters.Typed(clusterID)
 	if err != nil {
 		return nil, err
 	}
 	found := s.endpoints(clusterID)
-	for kind, cands := range wellKnown {
-		if _, ok := found[kind]; ok {
-			continue
-		}
-		for _, c := range cands {
-			if _, err := typed.CoreV1().Services(c[0]).Get(ctx, c[1], metav1.GetOptions{}); err == nil {
-				e := Endpoint{Kind: kind, Namespace: c[0], Service: c[1], Port: c[2]}
-				if kind == Mimir {
-					e.Path = "/prometheus"
-				}
+	if svcs, err := typed.CoreV1().Services("").List(ctx, metav1.ListOptions{}); err == nil {
+		for kind, e := range pick(svcs.Items) {
+			if _, ok := found[kind]; !ok {
 				found[kind] = e
-				break
+			}
+		}
+	} else {
+		for kind, cands := range wellKnown {
+			if _, ok := found[kind]; ok {
+				continue
+			}
+			for _, c := range cands {
+				if _, err := typed.CoreV1().Services(c[0]).Get(ctx, c[1], metav1.GetOptions{}); err == nil {
+					e := Endpoint{Kind: kind, Namespace: c[0], Service: c[1], Port: c[2]}
+					if kind == Mimir {
+						e.Path = "/prometheus"
+					}
+					found[kind] = e
+					break
+				}
 			}
 		}
 	}
+	s.mu.Lock()
+	if s.detected == nil {
+		s.detected = map[string]bool{}
+	}
+	s.detected[clusterID] = true
+	s.mu.Unlock()
 	return found, s.Store.Save("observability/"+clusterID, found)
+}
+
+// ensureDetected runs auto-detection once per cluster per session, so
+// dashboards work without a trip to Data sources.
+func (s *Service) ensureDetected(ctx context.Context, clusterID string) {
+	s.mu.Lock()
+	done := s.detected[clusterID]
+	s.mu.Unlock()
+	if !done {
+		_, _ = s.AutoDetect(ctx, clusterID)
+	}
 }
 
 // Do performs an HTTP GET against a backend, through the API server service
@@ -111,10 +149,11 @@ func (s *Service) AutoDetect(ctx context.Context, clusterID string) (map[string]
 func (s *Service) Do(ctx context.Context, clusterID, kind, path string, q url.Values) ([]byte, error) {
 	e, ok := s.endpoints(clusterID)[kind]
 	if !ok {
-		if kind == VictoriaMetrics || kind == Mimir {
-			return nil, fmt.Errorf("%s endpoint not configured", kind)
-		}
-		return nil, fmt.Errorf("%s endpoint not configured (use auto-detect or settings)", kind)
+		s.ensureDetected(ctx, clusterID)
+		e, ok = s.endpoints(clusterID)[kind]
+	}
+	if !ok {
+		return nil, &notConfigured{kind}
 	}
 	full := e.Path + path
 	if e.URL != "" {
@@ -173,12 +212,19 @@ func (s *Service) PromQuery(ctx context.Context, clusterID, query string, start,
 		q.Set("step", fmt.Sprintf("%ds", int(step.Seconds())))
 	}
 	var lastErr error
-	for _, kind := range []string{Prometheus, Mimir, VictoriaMetrics} {
+	for _, kind := range []string{Prometheus, VictoriaMetrics, Mimir} {
 		b, err := s.Do(ctx, clusterID, kind, path, q)
 		if err == nil {
 			return b, nil
 		}
-		lastErr = err
+		var nc *notConfigured
+		if lastErr == nil || !errors.As(err, &nc) {
+			lastErr = err
+		}
+	}
+	var nc *notConfigured
+	if errors.As(lastErr, &nc) {
+		return nil, errors.New("no Prometheus, VictoriaMetrics or Mimir found in this cluster. Open Monitoring → Data sources to enter its address")
 	}
 	return nil, lastErr
 }

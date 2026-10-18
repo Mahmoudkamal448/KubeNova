@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { AlertTriangle, Download, FolderSync, RefreshCw, Star, Upload, Activity } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, Download, FolderSync, RefreshCw, Star, Upload, Activity } from "lucide-react";
 import { KubeconfigSources } from "./KubeconfigSources";
 import { api, downloadUrl } from "../api";
 import { useStore } from "../store";
@@ -15,6 +15,15 @@ export function ClustersView() {
   const [importOpen, setImportOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
+  // Which groups are open, remembered across restarts. With several groups
+  // they start collapsed; searching or filtering shows everything.
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    try { return JSON.parse(localStorage.getItem("kubenova.openGroups") || "{}"); } catch { return {}; }
+  });
+  const saveOpen = (next: Record<string, boolean>) => {
+    setOpenGroups(next);
+    try { localStorage.setItem("kubenova.openGroups", JSON.stringify(next)); } catch { /* ignore */ }
+  };
   const list = useMemo(() => {
     const lq = q.toLowerCase();
     return s.clusters.filter((c) => (!groupFilter || (groupFilter === "★" ? c.favorite : c.group === groupFilter)) &&
@@ -31,6 +40,9 @@ export function ClustersView() {
     }
     return [...m.entries()];
   }, [list]);
+  const isOpen = (g: string) => !!q || !!groupFilter || (openGroups[g] ?? groups.length <= 1);
+  const setAll = (open: boolean) => saveOpen(Object.fromEntries(groups.map(([g]) => [g, open])));
+  const allOpen = groups.every(([g]) => isOpen(g));
   const stats = useMemo(() => ({
     total: s.clusters.length,
     connected: s.clusters.filter((c) => c.connected).length,
@@ -55,6 +67,7 @@ export function ClustersView() {
           {s.groups.map((g) => <option key={g}>{g}</option>)}
         </select>
         <div className="grow" />
+        {groups.length > 1 && !q && !groupFilter && <button className="btn" onClick={() => setAll(!allOpen)}>{allOpen ? <><ChevronsDownUp size={14} />Collapse all</> : <><ChevronsUpDown size={14} />Expand all</>}</button>}
         <button className="btn" onClick={() => setSourcesOpen(true)}><FolderSync size={14} />Kubeconfig sources</button>
         <button className="btn" onClick={() => setImportOpen(true)}><Upload size={14} />Paste kubeconfig</button>
         <a className="btn" href={downloadUrl("/kubeconfigs/merged")} download="kubeconfig-merged.yaml"><Download size={14} />Export merged</a>
@@ -77,10 +90,15 @@ export function ClustersView() {
       )}
       {groups.map(([g, cs]) => (
         <div key={g}>
-          <h2>{g} <span className="muted">({cs.length})</span></h2>
-          <div className="grid g3">
+          <h2 className="group-h" role="button" tabIndex={0} aria-expanded={isOpen(g)}
+            onClick={() => saveOpen({ ...openGroups, [g]: !isOpen(g) })}
+            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), saveOpen({ ...openGroups, [g]: !isOpen(g) }))}>
+            {isOpen(g) ? <ChevronDown size={15} /> : <ChevronRight size={15} />}{g} <span className="muted">({cs.length})</span>
+            {!isOpen(g) && cs.some((c) => c.favorite) && <Star size={12} fill="var(--warn)" color="var(--warn)" />}
+          </h2>
+          {isOpen(g) && <div className="grid g3">
             {cs.map((c) => <ClusterCard key={c.id} c={c} onEdit={() => setEdit(c)} />)}
-          </div>
+          </div>}
         </div>
       ))}
       {edit && <EditCluster c={edit} onClose={() => setEdit(null)} />}
