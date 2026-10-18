@@ -110,7 +110,7 @@ func (s *Server) monitoringRoutes(mux *http.ServeMux) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(res)
 	})
-	mux.HandleFunc("GET /api/clusters/{id}/observability", func(w http.ResponseWriter, r *http.Request) { ok(w, s.Metrics.Endpoints(r.PathValue("id"))) })
+	mux.HandleFunc("GET /api/clusters/{id}/observability", func(w http.ResponseWriter, r *http.Request) { ok(w, s.Metrics.Endpoints(r.Context(), r.PathValue("id"))) })
 	mux.HandleFunc("PUT /api/clusters/{id}/observability", func(w http.ResponseWriter, r *http.Request) {
 		var e metrics.Endpoint
 		if err := decode(r, &e); err != nil {
@@ -121,7 +121,7 @@ func (s *Server) monitoringRoutes(mux *http.ServeMux) {
 			fail(w, err)
 			return
 		}
-		ok(w, s.Metrics.Endpoints(r.PathValue("id")))
+		ok(w, s.Metrics.Endpoints(r.Context(), r.PathValue("id")))
 	})
 	mux.HandleFunc("POST /api/clusters/{id}/observability/detect", func(w http.ResponseWriter, r *http.Request) {
 		m, err := s.Metrics.AutoDetect(r.Context(), r.PathValue("id"))

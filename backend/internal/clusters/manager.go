@@ -238,7 +238,8 @@ func (m *Manager) SetDefaultGroup(source, group string) error {
 			meta = &Meta{}
 			m.state.Meta[id] = meta
 		}
-		if meta.Group == "" {
+		// Also replace "Rancher:" groups left by servers that had no name.
+		if g := strings.TrimSpace(meta.Group); g == "" || g == "Rancher:" {
 			meta.Group = group
 		}
 	}
@@ -334,8 +335,8 @@ func (m *Manager) reload() (fresh []string) {
 				if meta.Alias != "" {
 					c.Name = meta.Alias
 				}
-				if meta.Group != "" {
-					c.Group = meta.Group
+				if g := strings.TrimSpace(meta.Group); g != "" {
+					c.Group = g
 				}
 				c.Favorite, c.Color, c.Tags, c.LastOpened = meta.Favorite, meta.Color, meta.Tags, meta.LastOpened
 			}

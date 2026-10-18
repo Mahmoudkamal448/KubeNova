@@ -67,8 +67,12 @@ func (s *Service) endpoints(clusterID string) map[string]Endpoint {
 	return m
 }
 
-// Endpoints returns configured endpoints for a cluster.
-func (s *Service) Endpoints(clusterID string) map[string]Endpoint { return s.endpoints(clusterID) }
+// Endpoints returns the endpoints for a cluster, detecting them first if
+// this hasn't happened yet in this session.
+func (s *Service) Endpoints(ctx context.Context, clusterID string) map[string]Endpoint {
+	s.ensureDetected(ctx, clusterID)
+	return s.endpoints(clusterID)
+}
 
 // SetEndpoint saves an endpoint.
 func (s *Service) SetEndpoint(clusterID string, e Endpoint) error {

@@ -42,9 +42,25 @@ type Service struct {
 	pending map[string]ssoRequest // SSO login requests in progress
 }
 
+// serverLabel names a server in cluster groups.
+func serverLabel(sv Server) string {
+	if sv.Name != "" {
+		return sv.Name
+	}
+	if u, err := url.Parse(sv.URL); err == nil && u.Hostname() != "" {
+		return u.Hostname()
+	}
+	return sv.URL
+}
+
 func (s *Service) load() []Server {
 	var out []Server
 	_ = s.Store.Load("rancher/servers", &out)
+	for i := range out {
+		if strings.TrimSpace(out[i].Name) == "" {
+			out[i].Name = serverLabel(Server{URL: out[i].URL})
+		}
+	}
 	return out
 }
 
@@ -73,16 +89,27 @@ func (s *Service) server(id string) (Server, error) {
 // Upsert adds or updates a server.
 func (s *Service) Upsert(sv Server) (Server, error) {
 	sv.URL = strings.TrimRight(sv.URL, "/")
+	sv.Name = strings.TrimSpace(sv.Name)
 	if sv.ID == "" {
 		h := sha256.Sum256([]byte(sv.URL))
 		sv.ID = hex.EncodeToString(h[:6])
 	}
 	all := s.load()
+	if sv.Name == "" {
+		// A server without a name would put its clusters in a group called
+		// "Rancher: ", so name it after its host.
+		if u, err := url.Parse(sv.URL); err == nil && u.Host != "" {
+			sv.Name = u.Hostname()
+		}
+	}
 	found := false
 	for i := range all {
 		if all[i].ID == sv.ID {
 			if sv.Token == "" || sv.Token == "••••" {
 				sv.Token = all[i].Token
+			}
+			if sv.Name == "" {
+				sv.Name = all[i].Name
 			}
 			all[i] = sv
 			found = true
@@ -288,7 +315,7 @@ func (s *Service) ImportKubeconfigs(ctx context.Context, id string, clusterIDs [
 			return paths, err
 		}
 		// Keep each Rancher server's clusters together in the cluster list.
-		if err := s.Kube.SetDefaultGroup(p, "Rancher: "+sv.Name); err != nil {
+		if err := s.Kube.SetDefaultGroup(p, "Rancher: "+serverLabel(sv)); err != nil {
 			return paths, err
 		}
 		paths = append(paths, p)

@@ -64,7 +64,7 @@ export function ClustersView() {
         <select value={groupFilter} onChange={(e) => setGroupFilter(e.target.value)}>
           <option value="">All groups</option>
           <option value="★">★ Favorites</option>
-          {s.groups.map((g) => <option key={g}>{g}</option>)}
+          {s.groups.map((g) => <option key={g} value={g}>{g}</option>)}
         </select>
         <div className="grow" />
         {groups.length > 1 && !q && !groupFilter && <button className="btn" onClick={() => setAll(!allOpen)}>{allOpen ? <><ChevronsDownUp size={14} />Collapse all</> : <><ChevronsUpDown size={14} />Expand all</>}</button>}
