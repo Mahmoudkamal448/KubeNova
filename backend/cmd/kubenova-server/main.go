@@ -22,6 +22,7 @@ import (
 	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/api"
 	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/mcp"
 	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/store"
+	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/tools"
 )
 
 func main() {
@@ -38,6 +39,7 @@ func main() {
 		fmt.Println(api.Version)
 		return
 	}
+	tools.FixPath()
 	if *token == "" {
 		b := make([]byte, 24)
 		_, _ = rand.Read(b)
