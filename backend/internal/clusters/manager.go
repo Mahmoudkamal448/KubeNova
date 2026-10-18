@@ -30,7 +30,7 @@ import (
 	// natively by client-go.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/store"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/store"
 )
 
 // Cluster describes a single kube context discovered from a kubeconfig source.

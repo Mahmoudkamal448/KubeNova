@@ -4,10 +4,10 @@ package settings
 import (
 	"sync"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/ai"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/mcp"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/plugins"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/store"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/ai"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/mcp"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/plugins"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/store"
 )
 
 // Settings are user preferences.
@@ -42,7 +42,7 @@ func Defaults() Settings {
 		PageSize:       500,
 		KubeconfigSync: 3,
 		HealthMode:     "opened",
-		MarketplaceURL: "https://raw.githubusercontent.com/mahmoudkamal448/infrastructue-rebo/main/marketplace/index.json",
+		MarketplaceURL: "https://raw.githubusercontent.com/Mahmoudkamal448/KubeNova/main/marketplace/index.json",
 		Shortcuts: map[string]string{
 			"palette": "Mod+K", "search": "Mod+Shift+F", "terminal": "Mod+`", "ai": "Mod+I",
 			"clusters": "Mod+1", "workloads": "Mod+2", "k9s": "Mod+Shift+K",

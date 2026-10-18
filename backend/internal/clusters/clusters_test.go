@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/store"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/store"
 )
 
 const kc = `apiVersion: v1

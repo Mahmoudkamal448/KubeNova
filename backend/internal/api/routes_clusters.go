@@ -13,8 +13,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/clusters"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/resources"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/clusters"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/resources"
 )
 
 func (s *Server) routes(mux *http.ServeMux) {

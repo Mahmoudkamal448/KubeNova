@@ -14,13 +14,13 @@ import (
 
 	"sigs.k8s.io/yaml"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/cloud"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/enterprise"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/integrations"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/rancher"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/resources"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/settings"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/terminal"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/cloud"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/enterprise"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/integrations"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/rancher"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/resources"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/settings"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/terminal"
 )
 
 func jsonOut(w http.ResponseWriter, raw json.RawMessage, err error) {

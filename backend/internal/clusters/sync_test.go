@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/store"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/store"
 )
 
 func kubeconfig(ctx, server string) []byte {

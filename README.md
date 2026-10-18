@@ -2,6 +2,25 @@
 
 KubeNova is a cross-platform desktop Kubernetes IDE (Windows, macOS, Linux) in the spirit of Lens. It adds an AI assistant built on Claude and covers enterprise needs. **Every Pro and Enterprise feature is included in the free edition**: team workspaces, RBAC, audit logs, SSO (SAML / OIDC / LDAP / SCIM), air-gapped mode, FIPS builds, and unlimited clusters and seats. Nothing is gated behind a license.
 
+[![Watch the KubeNova video](docs/video/poster.jpg)](docs/video/kubenova.mp4)
+
+▶ **[Watch the 1-minute video](docs/video/kubenova.mp4)**
+
+## Download
+
+**[⬇ Download the latest version](https://github.com/Mahmoudkamal448/KubeNova/releases/latest)**. It's free.
+
+| Platform | File to pick on the download page |
+|---|---|
+| Windows 10/11 | `KubeNova-Setup-…-win-x64.exe` (installer) or `KubeNova-Portable-…-win-x64.exe` (no install) |
+| macOS, Apple Silicon (M1–M4) | `KubeNova-…-mac-arm64.dmg` |
+| macOS, Intel | `KubeNova-…-mac-x64.dmg` |
+| Linux | `KubeNova-…-linux-x86_64.AppImage`, or `KubeNova-…-linux-amd64.deb` for Ubuntu/Debian |
+
+The builds aren't code-signed yet. On **Windows**, if SmartScreen appears, click **More info → Run anyway**. On **macOS**, right-click the app and choose **Open** the first time; if macOS says the app "is damaged", run `xattr -cr /Applications/KubeNova.app` in Terminal. On **Linux**, make the AppImage executable (`chmod +x KubeNova-*.AppImage`) and run it.
+
+Guides: [Import clusters from Rancher](docs/rancher.md) · [Sync kubeconfig folders](docs/kubeconfig-sync.md)
+
 ```
 ┌────────────── Electron (React + TypeScript) ──────────────┐
 │ Clusters · Resources · Monitoring · Helm · GitOps · Security│

@@ -21,8 +21,8 @@ import (
 	"k8s.io/client-go/dynamic"
 	"sigs.k8s.io/yaml"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/clusters"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/textdiff"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/clusters"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/textdiff"
 )
 
 // FieldManager identifies changes performed through the IDE.

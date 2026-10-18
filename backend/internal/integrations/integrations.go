@@ -25,9 +25,9 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/clusters"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/store"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/tools"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/clusters"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/store"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/tools"
 )
 
 // Connection is a saved connection of any kind (ssh, postgres, mysql, redis,

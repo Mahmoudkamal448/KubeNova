@@ -26,7 +26,7 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/client-go/transport/spdy"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/clusters"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/clusters"
 )
 
 // Service provides pod tools.

@@ -14,7 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/clusters"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/clusters"
 )
 
 // App is a normalised GitOps application (Flux Kustomization/HelmRelease or

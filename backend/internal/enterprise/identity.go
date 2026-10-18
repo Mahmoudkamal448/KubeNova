@@ -26,7 +26,7 @@ import (
 	"github.com/crewjam/saml/samlsp"
 	"github.com/go-ldap/ldap/v3"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/store"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/store"
 )
 
 // User is the identity using the IDE.

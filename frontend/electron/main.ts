@@ -198,7 +198,7 @@ app.whenReady().then(() => {
       { role: "editMenu" },
       { role: "viewMenu" },
       { role: "windowMenu" },
-      { role: "help", submenu: [{ label: "Documentation", click: () => shell.openExternal("https://github.com/mahmoudkamal448/infrastructue-rebo") }] },
+      { role: "help", submenu: [{ label: "Documentation", click: () => shell.openExternal("https://github.com/Mahmoudkamal448/KubeNova") }] },
     ]),
   );
   startBackend();

@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/gitops"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/helm"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/metrics"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/pods"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/resources"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/gitops"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/helm"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/metrics"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/pods"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/resources"
 )
 
 // Services bundles what the Kubernetes tools need.

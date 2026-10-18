@@ -10,7 +10,7 @@ import (
 	"crypto/fips140"
 	"time"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/store"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/store"
 )
 
 // Features lists every capability, all of which are enabled for everyone.

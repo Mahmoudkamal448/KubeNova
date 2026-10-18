@@ -79,7 +79,7 @@
       {
         "provider": "github",
         "owner": "Mahmoudkamal448",
-        "repo": "infrastructue-rebo"
+        "repo": "KubeNova"
       }
     ],
     "nsis": {
@@ -124,5 +124,5 @@
     "wait-on": "^8.0.1",
     "ws": "^8.18.0"
   },
-  "homepage": "https://github.com/mahmoudkamal448/infrastructue-rebo"
+  "homepage": "https://github.com/Mahmoudkamal448/KubeNova"
 }

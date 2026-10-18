@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/clusters"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/textdiff"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/tools"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/clusters"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/textdiff"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/tools"
 )
 
 // Service runs helm against a cluster.
@@ -60,17 +60,10 @@ type Release struct {
 	AppVersion string `json:"app_version"`
 }
 
-// Releases lists releases in all namespaces (or one).
+// Releases lists releases in all namespaces (or one). Read directly from
+// the cluster, so it works without the helm CLI.
 func (s *Service) Releases(ctx context.Context, clusterID, ns string) ([]Release, error) {
-	args := []string{"list", "--all", "--max", "0"}
-	if ns == "" {
-		args = append(args, "--all-namespaces")
-	} else {
-		args = append(args, "-n", ns)
-	}
-	var out []Release
-	err := s.runJSON(ctx, clusterID, args, &out)
-	return out, err
+	return s.nativeReleases(ctx, clusterID, ns)
 }
 
 // HistoryEntry is a release revision.
@@ -85,21 +78,12 @@ type HistoryEntry struct {
 
 // History returns release history.
 func (s *Service) History(ctx context.Context, clusterID, ns, name string) ([]HistoryEntry, error) {
-	var out []HistoryEntry
-	err := s.runJSON(ctx, clusterID, []string{"history", name, "-n", ns, "--max", "50"}, &out)
-	return out, err
+	return s.nativeHistory(ctx, clusterID, ns, name)
 }
 
 // Get returns values, manifest, notes or hooks of a release revision.
 func (s *Service) Get(ctx context.Context, clusterID, ns, name, what string, revision int) (string, error) {
-	args := []string{"get", what, name, "-n", ns}
-	if what == "values" {
-		args = append(args, "--all")
-	}
-	if revision > 0 {
-		args = append(args, "--revision", strconv.Itoa(revision))
-	}
-	return s.run(ctx, clusterID, args, nil)
+	return s.nativeGet(ctx, clusterID, ns, name, what, revision)
 }
 
 // InstallRequest describes an install or upgrade.

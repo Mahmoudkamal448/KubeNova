@@ -27,3 +27,10 @@ if (goos === "darwin" && !process.env.GOARCH) {
 } else {
   build(goarch, out);
 }
+
+// Bundle helm next to the backend (set KUBENOVA_BUNDLE_HELM=0 to skip).
+if (process.env.KUBENOVA_BUNDLE_HELM !== "0") {
+  const helmArgs = [path.join(__dirname, "bundle-helm.cjs"), goos];
+  if (!(goos === "darwin" && !process.env.GOARCH)) helmArgs.push(goarch);
+  execFileSync(process.execPath, helmArgs, { stdio: "inherit" });
+}

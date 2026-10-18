@@ -13,9 +13,9 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/clusters"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/store"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/tools"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/clusters"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/store"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/tools"
 )
 
 // fakeAWS mimics the parts of the AWS CLI KubeNova uses: EKS discovery,

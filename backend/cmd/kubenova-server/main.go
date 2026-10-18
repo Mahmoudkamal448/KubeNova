@@ -18,11 +18,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/ai"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/api"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/mcp"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/store"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/tools"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/ai"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/api"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/mcp"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/store"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/tools"
 )
 
 func main() {

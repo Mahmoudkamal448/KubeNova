@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/store"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/store"
 )
 
 // SCIM implements a minimal SCIM 2.0 provisioning endpoint (Users and

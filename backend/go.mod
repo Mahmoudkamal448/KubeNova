@@ -1,4 +1,4 @@
-module github.com/mahmoudkamal448/infrastructue-rebo/backend
+module github.com/mahmoudkamal448/kubenova/backend
 
 go 1.24.7
 

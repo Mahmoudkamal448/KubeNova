@@ -12,8 +12,8 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/pods"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/terminal"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/pods"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/terminal"
 )
 
 func logOptions(r *http.Request) pods.LogOptions {

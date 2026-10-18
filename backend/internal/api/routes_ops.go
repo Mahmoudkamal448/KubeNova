@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/ai"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/gitops"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/helm"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/metrics"
-	"github.com/mahmoudkamal448/infrastructue-rebo/backend/internal/plugins"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/ai"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/gitops"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/helm"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/metrics"
+	"github.com/mahmoudkamal448/kubenova/backend/internal/plugins"
 )
 
 func (s *Server) monitoringRoutes(mux *http.ServeMux) {
