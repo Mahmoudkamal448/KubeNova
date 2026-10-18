@@ -1,7 +1,7 @@
 {
   "name": "kubenova",
   "productName": "KubeNova",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "AI-powered, enterprise-ready Kubernetes IDE",
   "author": {
     "name": "KubeNova",
