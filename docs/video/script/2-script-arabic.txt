@@ -1,0 +1,85 @@
+KubeNova — Voice-over script (Egyptian Arabic)
+
+--- Scene 1: Hook (0:00–0:07) ---
+
+[Expression: curious, calm, slightly intriguing]
+عمرك حسّيت إن إدارة الـ Kubernetes بقت شغلانة لوحدها؟
+
+[Expression: relatable, slightly frustrated, faster pace]
+عشرات الـ clusters… ملفات kubeconfig في كل حتة… وست أدوات مفتوحين في نفس الوقت.
+
+--- Scene 2: The problem (0:07–0:16) ---
+
+[Expression: empathetic, storytelling]
+والمشكلة الحقيقية بتظهر لما حاجة تقع في الـ production.
+
+[Expression: tense, quick]
+تفضل تجري ورا الـ logs، والـ events، والـ metrics… وكل دقيقة بتعدّي بتفرق.
+
+[Expression: pause, then confident turn]
+طب لو كل ده في مكان واحد؟
+
+--- Scene 3: The reveal (0:16–0:22) ---
+
+[Expression: excited, proud, slower on the name]
+قابل KubeNova.
+
+[Expression: confident, clear]
+الـ Kubernetes IDE الجديد اللي بيجمعلك كل الـ clusters بتاعتك… في شاشة واحدة بسيطة.
+
+--- Scene 4: All clusters, one place (0:22–0:34) ---
+
+[Expression: energetic, informative]
+سواء الـ clusters بتاعتك on-premise، أو على AWS، أو Azure، أو Google Cloud، أو حتى Rancher…
+
+[Expression: reassuring, smooth]
+KubeNova بيجمعهم كلهم في dashboard واحد، ويعمل sync أوتوماتيك لفولدرات الـ kubeconfig بتاعتك.
+
+[Expression: smart, slightly playful]
+وبيتكلم بس مع الـ cluster اللي إنت فاتحه… فسريع وخفيف حتى لو عندك مية cluster.
+
+--- Scene 5: Visibility (0:34–0:44) ---
+
+[Expression: impressed, descriptive]
+هتشوف كل حاجة بوضوح: الـ pods، والـ deployments، والـ services، وأي CRD… كلهم live.
+
+[Expression: confident, rhythmic]
+Topology graph يوريك إزاي كل حاجة متوصلة ببعض، والـ metrics والـ logs قدامك من غير ما تكتب ولا command.
+
+--- Scene 6: AI troubleshooting (0:44–0:58) ---
+
+[Expression: excited, building up]
+والأقوى؟ عندك AI assistant جوه الـ IDE نفسه.
+
+[Expression: conversational, natural]
+تسأله: "ليه الـ pod ده بيعمل crash؟"
+
+[Expression: impressed, clear, slightly slower]
+فيقرا الـ logs والـ events، ويقولك السبب الحقيقي… ويقترح الـ fix، وينفّذه بعد موافقتك.
+
+[Expression: confident, punchy]
+اللي كان بياخد ساعة… بقى بياخد دقايق.
+
+--- Scene 7: Everything else (0:58–1:10) ---
+
+[Expression: energetic, fast list rhythm]
+Helm، وGitOps مع Argo CD وFlux، وsecurity scanning، وRBAC، وmulti-cluster search…
+
+[Expression: satisfied, warm]
+كل الأدوات اللي فريقك محتاجها، في مكان واحد.
+
+--- Scene 8: Free and every platform (1:10–1:18) ---
+
+[Expression: surprised, delighted]
+وكل الـ enterprise features دي… مجانية بالكامل.
+
+[Expression: confident, clear]
+شغال على Windows، وmacOS، وLinux.
+
+--- Scene 9: Call to action (1:18–1:25) ---
+
+[Expression: inspiring, slower, emphasize the name]
+KubeNova… Kubernetes، بس أسهل.
+
+[Expression: friendly, inviting, smile in voice]
+نزّله النهارده، وخلّي فريقك يركز على اللي بيبنيه… مش على إدارته.

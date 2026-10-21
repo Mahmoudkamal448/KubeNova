@@ -1,0 +1,85 @@
+KubeNova — Voice-over script (English)
+
+--- Scene 1: Hook (0:00–0:07) ---
+
+[Expression: curious, calm, slightly intriguing]
+Ever felt like managing Kubernetes became a full-time job on its own?
+
+[Expression: relatable, slightly frustrated, faster pace]
+Dozens of clusters… kubeconfig files everywhere… and six different tools open at the same time.
+
+--- Scene 2: The problem (0:07–0:16) ---
+
+[Expression: empathetic, storytelling]
+And the real pain shows up when something breaks in production.
+
+[Expression: tense, quick]
+You're chasing logs, events, and metrics… and every minute counts.
+
+[Expression: pause, then confident turn]
+What if all of it lived in one place?
+
+--- Scene 3: The reveal (0:16–0:22) ---
+
+[Expression: excited, proud, slower on the name]
+Meet KubeNova.
+
+[Expression: confident, clear]
+The new Kubernetes IDE that brings all your clusters into one simple screen.
+
+--- Scene 4: All clusters, one place (0:22–0:34) ---
+
+[Expression: energetic, informative]
+Whether your clusters run on-premise, on AWS, Azure, Google Cloud, or even Rancher…
+
+[Expression: reassuring, smooth]
+KubeNova brings them together in a single dashboard, and keeps your kubeconfig folders in sync automatically.
+
+[Expression: smart, slightly playful]
+And it only talks to the cluster you open… so it stays fast and light, even with a hundred clusters.
+
+--- Scene 5: Visibility (0:34–0:44) ---
+
+[Expression: impressed, descriptive]
+See everything clearly: pods, deployments, services, any CRD… all live.
+
+[Expression: confident, rhythmic]
+A topology graph shows how everything connects, with metrics and logs right in front of you, without typing a single command.
+
+--- Scene 6: AI troubleshooting (0:44–0:58) ---
+
+[Expression: excited, building up]
+The best part? There's an AI assistant built right into the IDE.
+
+[Expression: conversational, natural]
+Ask it: "Why is this pod crashing?"
+
+[Expression: impressed, clear, slightly slower]
+It reads the logs and events, finds the real root cause… suggests the fix, and applies it with your approval.
+
+[Expression: confident, punchy]
+What used to take an hour… now takes minutes.
+
+--- Scene 7: Everything else (0:58–1:10) ---
+
+[Expression: energetic, fast list rhythm]
+Helm, GitOps with Argo CD and Flux, security scanning, RBAC, multi-cluster search…
+
+[Expression: satisfied, warm]
+Every tool your team needs, in one place.
+
+--- Scene 8: Free and every platform (1:10–1:18) ---
+
+[Expression: surprised, delighted]
+And all those enterprise features… are completely free.
+
+[Expression: confident, clear]
+Available on Windows, macOS, and Linux.
+
+--- Scene 9: Call to action (1:18–1:25) ---
+
+[Expression: inspiring, slower, emphasize the name]
+KubeNova… Kubernetes, made simple.
+
+[Expression: friendly, inviting, smile in voice]
+Download it today, and let your team focus on what they build… not on managing it.
