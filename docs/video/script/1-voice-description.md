@@ -10,7 +10,11 @@
 | **Personality** | Smart, friendly and credible, like a colleague who has lived the problem and found the fix |
 | **Avoid** | Shouting, exaggerated "radio" delivery, or a robotic, flat reading of the English words |
 
-## Prompt to paste into the TTS voice field
+## Short description (under 200 characters, for Cartesia and similar tools)
+
+Warm, confident Egyptian male in his early 30s with a Cairene accent. Modern tech-launch tone: clear, friendly, medium pace, English tech terms said naturally. Not salesy.
+
+## Longer prompt (for tools that allow more text)
 
 A confident, warm male voice in his early thirties speaking natural Cairene Egyptian Arabic, pronouncing English tech terms the way Egyptian software engineers do. Modern tech-startup launch tone: clear, friendly, credible, medium pace, energy rising toward the end. Not salesy, not robotic.
 
