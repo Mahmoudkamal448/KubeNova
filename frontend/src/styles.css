@@ -122,3 +122,10 @@ pre { background: var(--code); border: 1px solid var(--border); border-radius: 8
 .group-h { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; border-radius: 6px; padding: 4px 6px; margin-left: -6px; width: fit-content; }
 .group-h:hover { background: var(--bg3); }
 .group-h:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* macOS draws its window buttons at the top-left (see trafficLightPosition):
+   keep the rail's logo and the top bar's first control clear of them, and let
+   the strip above the logo drag the window. */
+html[data-platform="darwin"] .rail { padding-top: 46px; -webkit-app-region: drag; }
+html[data-platform="darwin"] .rail > * { -webkit-app-region: no-drag; }
+html[data-platform="darwin"] .topbar { padding-left: 32px; }

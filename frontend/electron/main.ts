@@ -76,7 +76,7 @@ function createWindow() {
     // window buttons over KubeNova's own top bar instead of a system title
     // bar and a light menu bar that clash with the app.
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "hidden",
-    ...(process.platform === "darwin" ? {} : { titleBarOverlay: titleBarColors(true) }),
+    ...(process.platform === "darwin" ? { trafficLightPosition: { x: 16, y: 16 } } : { titleBarOverlay: titleBarColors(true) }),
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
