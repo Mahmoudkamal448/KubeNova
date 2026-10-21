@@ -12,7 +12,9 @@
   --mono: "DejaVu Sans Mono", monospace;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); color: var(--fg); font-family: Inter, sans-serif; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; }
+html.V, html.V body { width: 1080px; height: 1920px; }
+html, body { background: var(--bg); color: var(--fg); font-family: Inter, sans-serif; }
 canvas { position: absolute; inset: 0; }
 #cam { position: absolute; inset: 0; transform-origin: 50% 50%; }
 .scene { position: absolute; inset: 0; opacity: 0; visibility: hidden; perspective: 1800px; }
@@ -66,6 +68,50 @@ canvas { position: absolute; inset: 0; }
 .bigword { font: 900 150px/1 Inter; letter-spacing: -.04em; }
 .label { font: 700 22px Inter; letter-spacing: .3em; text-transform: uppercase; color: var(--blue); }
 
+
+/* ================= vertical 9:16 layout ================= */
+.V #pLogs { left: 70px !important; top: 330px !important; width: 940px !important; height: 430px !important; }
+.V #pEvents { left: 70px !important; top: 790px !important; width: 940px !important; height: 430px !important; }
+.V #pMetrics { left: 70px !important; top: 1250px !important; width: 940px !important; height: 430px !important; }
+.V #logLines { height: 392px !important; }
+.V #memChart { width: 940px; height: 392px; }
+.V #timer { top: 170px !important; }
+.V #alertCard { width: 900px !important; }
+.V .ide { width: 1000px !important; height: 1480px !important; }
+.V #ideGrid { grid-template-columns: repeat(2, 1fr) !important; }
+.V #sweep { height: 1920px !important; }
+.V #hub { top: 1250px !important; }
+.V #dash { width: 1000px !important; height: 1640px !important; }
+.V #dashCols { grid-template-columns: repeat(2, 1fr) !important; }
+.V #folder { left: 390px !important; top: 1560px !important; }
+.V #hundred { width: 1000px !important; height: 1000px !important; }
+.V #latency { left: 110px !important; top: 1540px !important; }
+.V #count100 { left: 570px !important; top: 1540px !important; }
+.V #ide5 { grid-template-columns: 76px 230px 1fr !important; }
+.V #ide5 .tbl th:nth-child(n+4), .V #ide5 .tbl td:nth-child(n+4) { display: none; }
+.V #topo { width: 1000px !important; height: 1300px !important; }
+.V #mChart { left: 60px !important; top: 230px !important; width: 960px !important; height: 620px !important; }
+.V #mLogs { left: 60px !important; top: 900px !important; width: 960px !important; height: 620px !important; }
+.V #noCmd { left: 140px !important; top: 1600px !important; width: 800px !important; }
+.V #ide6 { height: 1680px !important; }
+.V #main6 { grid-template-columns: 1fr !important; }
+.V #main6 > div:first-child { zoom: 1.25; }
+.V #aiPanel > div:last-child { zoom: 1.32; }
+.V #aiPanel > div:first-child { zoom: 1.2; }
+.V #payoff { width: 1000px !important; }
+.V #payoff > div { flex-direction: column !important; gap: 30px !important; }
+.V #payArrow { transform: rotate(90deg); }
+.V #ide7 { height: 1400px !important; }
+.V #ide7main > div { grid-template-columns: repeat(2, 1fr) !important; }
+.V #entLabel { margin-top: 180px; }
+.V #badges { top: 380px !important; flex-wrap: wrap; padding: 0 60px; }
+.V #tagWrap { left: 340px !important; top: 760px !important; }
+.V #devices { top: 170px !important; flex-direction: column; align-items: center; gap: 26px !important; }
+.V #devices .dev { transform-origin: 50% 0; }
+.V #cta { flex-direction: column; gap: 22px !important; }
+.V #word9 { font-size: 128px !important; }
+#word3, #word9, #tagline, #osRow, #url, #dlBtn { white-space: nowrap; }
+
 #grain { mix-blend-mode: overlay; opacity: .09; pointer-events: none; }
 #vig { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0,0,0,.6) 100%); }
 #redwash { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(242,84,91,.45) 100%); opacity: 0; }
@@ -74,6 +120,7 @@ canvas { position: absolute; inset: 0; }
 </style>
 </head>
 <body>
+<script>if (location.hash === "#v") document.documentElement.classList.add("V");</script>
 <canvas id="bg" width="1920" height="1080"></canvas>
 <div id="cam">
   <!-- ============ S1: chaos ============ -->
@@ -195,7 +242,7 @@ canvas { position: absolute; inset: 0; }
     <div id="ide6" class="ide center" style="width:1600px">
       <div class="rail"><div class="lg">K</div><b></b><b class="on"></b><b></b><b></b><b></b></div>
       <div class="top"><div class="sel"><span class="dot ok"></span>prod-eu</div><div class="sel">checkout</div><div style="flex:1"></div></div>
-      <div class="main" style="display:grid;grid-template-columns:1fr 720px;gap:26px;padding:24px">
+      <div class="main" id="main6" style="display:grid;grid-template-columns:1fr 720px;gap:26px;padding:24px">
         <div>
           <div style="font:800 30px Inter">Pods</div>
           <table class="tbl" style="margin-top:14px"><thead><tr><th>Name</th><th>Status</th><th>Restarts</th></tr></thead><tbody>
@@ -287,6 +334,12 @@ canvas { position: absolute; inset: 0; }
 
 <script src="gsap.min.js"></script>
 <script>
+// ---------- layout ----------
+const V = location.hash === "#v";
+const W = V ? 1080 : 1920, H = V ? 1920 : 1080, CX = W / 2, CY = H / 2;
+["bg", "fx"].forEach((id) => { document.getElementById(id).width = W; document.getElementById(id).height = H; });
+document.getElementById("grain").style.cssText = `width:${W}px;height:${H}px`;
+document.getElementById("srcSvg").setAttribute("width", W); document.getElementById("srcSvg").setAttribute("height", H);
 // ---------- deterministic helpers ----------
 let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 const R = (a, b) => a + (b - a) * rnd();
@@ -312,20 +365,20 @@ const P = { neb: 0, red: 0, grid: 0.6, warp: 0, starSpeed: 1, hue: 0, implode: 0
 // ---------- S1 content ----------
 const cmdList = ["kubectl get pods -A", "kubectl logs -f", "kubectl describe pod", "kubectl config use-context", "kubectl port-forward", "kubectl rollout restart", "kubectl get events", "kubectl top nodes", "helm upgrade --install", "kubectl edit deploy", "kubectl get svc", "aws eks update-kubeconfig"];
 cmdList.forEach((c, i) => {
-  const a = i / cmdList.length * Math.PI * 2 + 0.3, rx = 560 + (i % 3) * 70, ry = 300 + (i % 2) * 60;
-  const e = el("div", "chip mono cmd", `<span style="color:var(--ok)">$</span> ${c}`, `position:absolute;left:${960 + Math.cos(a) * rx - 150}px;top:${540 + Math.sin(a) * ry - 20}px;background:rgba(18,27,46,.9);border:1px solid #2b3c5d;color:#c9d6f0;font-size:20px`);
+  const a = i / cmdList.length * Math.PI * 2 + 0.3, rx = V ? 250 + (i % 3) * 40 : 560 + (i % 3) * 70, ry = V ? 640 + (i % 2) * 90 : 300 + (i % 2) * 60;
+  const e = el("div", "chip mono cmd", `<span style="color:var(--ok)">$</span> ${c}`, `position:absolute;left:${CX + Math.cos(a) * rx - 150}px;top:${CY + Math.sin(a) * ry - 20}px;background:rgba(18,27,46,.9);border:1px solid #2b3c5d;color:#c9d6f0;font-size:20px`);
   e.dataset.a = a; $("#cmds").appendChild(e);
 });
 for (let i = 0; i < 64; i++) {
-  const col = i % 11, row = Math.floor(i / 11);
-  const x = 110 + col * 165 + (row % 2) * 82 + R(-12, 12), y = 120 + row * 150 + R(-12, 12);
+  const cols = V ? 7 : 11, col = i % cols, row = Math.floor(i / cols);
+  const x = V ? 40 + col * 145 + (row % 2) * 72 + R(-10, 10) : 110 + col * 165 + (row % 2) * 82 + R(-12, 12), y = V ? 130 + row * 180 + R(-12, 12) : 120 + row * 150 + R(-12, 12);
   const e = el("div", "sw", `<svg width="64" height="64" viewBox="-50 -50 100 100"><polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill="#16213a" stroke="${["#4f8cff", "#7c5cff", "#38bdf8", "#326ce5"][i % 4]}" stroke-width="4"/><circle r="9" fill="${["#4f8cff", "#7c5cff", "#38bdf8", "#326ce5"][i % 4]}"/></svg>`, `position:absolute;left:${x}px;top:${y}px`);
   $("#swarm").appendChild(e);
 }
 const fileNames = ["~/.kube/config", "prod-eu.yaml", "staging.kubeconfig", "eks-us-east-1.yaml", "aks-west.yaml", "gke-prod.yaml", "rancher-edge.yaml", "dev.yaml", "kind-local.yaml", "team-b/config"];
 fileNames.forEach((f, i) => {
   const e = el("div", "yf glass", `<div style="font:700 15px Inter;color:#7f93ba;letter-spacing:.1em">YAML</div><div class="mono" style="font-size:19px;margin-top:8px;color:#dfe8fb">${f}</div><div style="margin-top:12px;height:8px;border-radius:4px;background:#26344f;width:80%"></div><div style="margin-top:8px;height:8px;border-radius:4px;background:#26344f;width:60%"></div>`,
-    `position:absolute;width:250px;padding:18px 20px;left:${R(80, 1590)}px;top:${R(70, 900)}px;border-radius:14px`);
+    `position:absolute;width:250px;padding:18px 20px;left:${R(60, W - 330)}px;top:${R(70, H - 180)}px;border-radius:14px`);
   e.dataset.r = R(-24, 24); $("#files").appendChild(e);
 });
 const toolDefs = [
@@ -338,7 +391,7 @@ const toolDefs = [
 ];
 toolDefs.forEach(([name, bg, body], i) => {
   const w = el("div", "win tool", `<div class="tb"><i></i><i></i><i></i><span>${name}</span></div><div class="body" style="background:${bg};height:300px;overflow:hidden">${body(9)}</div>`,
-    `left:${[180, 1010, 560, 1240, 300, 760][i]}px;top:${[140, 120, 420, 520, 600, 260][i]}px;width:${[620, 560, 600, 560, 580, 600][i]}px;height:340px`);
+    (V ? `left:${[50, 390, 110, 400, 60, 330][i]}px;top:${[200, 470, 760, 1040, 1300, 1530][i]}px;width:640px;height:340px` : `left:${[180, 1010, 560, 1240, 300, 760][i]}px;top:${[140, 120, 420, 520, 600, 260][i]}px;width:${[620, 560, 600, 560, 580, 600][i]}px;height:340px`));
   w.dataset.r = [-4, 3, -2, 5, 2, -3][i]; $("#tools").appendChild(w);
 });
 
@@ -359,10 +412,10 @@ const clusterNames = ["prod-eu", "prod-us", "staging", "payments", "checkout", "
 const clusterSub = ["eks · eu-west-1", "eks · us-east-1", "rke2 · rancher", "aks · westeurope", "gke · europe-west4", "eks · eu-central-1", "gke · us-central1", "k3s · on-prem", "k3s · on-prem", "kind", "minikube", "aks · uaenorth"];
 clusterNames.forEach((n, i) => $("#ideGrid").appendChild(el("div", "ccard ic3", `<div class="n"><span class="dot ${i % 5 === 0 ? "ok" : ""}"></span>${n}</div><div class="s">${clusterSub[i]}</div><div style="margin-top:12px;display:flex;gap:8px"><span class="tag">${clusterSub[i].split(" · ")[0]}</span></div>`)));
 for (let i = 0; i < 4; i++) {
-  const [x, y] = [[220, 110], [1700, 110], [220, 970], [1700, 970]][i];
+  const [x, y] = V ? [[70, 200], [1010, 200], [70, 1720], [1010, 1720]][i] : [[220, 110], [1700, 110], [220, 970], [1700, 970]][i];
   $("#brackets").appendChild(el("div", "br", "", `position:absolute;left:${x - 30}px;top:${y - 30}px;width:60px;height:60px;border-color:rgba(160,190,255,.8);border-style:solid;border-width:${i < 2 ? "4px" : "0"} ${i % 2 ? "4px" : "0"} ${i >= 2 ? "4px" : "0"} ${i % 2 ? "0" : "4px"}`));
 }
-for (let i = 0; i < 4; i++) $("#rings").appendChild(el("div", "ring3", "", `position:absolute;left:960px;top:540px;width:300px;height:300px;margin:-150px;border-radius:50%;border:${3 - i * .5}px solid ${["#9db8ff", "#c084fc", "#7c5cff", "#4f8cff"][i]}`));
+for (let i = 0; i < 4; i++) $("#rings").appendChild(el("div", "ring3", "", `position:absolute;left:${CX}px;top:${CY}px;width:300px;height:300px;margin:-150px;border-radius:50%;border:${3 - i * .5}px solid ${["#9db8ff", "#c084fc", "#7c5cff", "#4f8cff"][i]}`));
 
 // ---------- S4 content ----------
 const sources = [
@@ -372,7 +425,8 @@ const sources = [
   { k: "gcp", name: "Google Cloud", sub: "GKE", col: "#34a853", x: 1360, y: 160 },
   { k: "rancher", name: "Rancher", sub: "RKE2 · K3s", col: "#2fb8ac", x: 1620, y: 300 },
 ];
-const hubXY = [960, 640];
+const hubXY = V ? [540, 1345] : [960, 640];
+if (V) [[270, 330], [810, 330], [270, 640], [810, 640], [540, 930]].forEach(([x, y], i) => { sources[i].x = x; sources[i].y = y; });
 sources.forEach((s) => {
   const n = el("div", "src glass", `<div style="width:64px;height:64px;border-radius:16px;display:grid;place-items:center;background:${s.col}22;border:1px solid ${s.col}88">${s.icon || `<span style="font:900 ${s.name.length > 6 ? 18 : 24}px Inter;color:${s.col}">${s.name === "Google Cloud" ? "G" : s.name === "Rancher" ? "R" : s.name}</span>`}</div><div><div style="font:800 26px Inter">${s.name}</div><div style="font:600 16px Inter;color:var(--fg3)">${s.sub}</div></div>`,
     `position:absolute;left:${s.x - 150}px;top:${s.y - 50}px;width:300px;padding:16px 20px;display:flex;align-items:center;gap:16px;border-color:${s.col}66`);
@@ -386,12 +440,12 @@ sources.forEach((s) => {
   for (let j = 0; j < 4; j++) col.appendChild(el("div", "ccard dcard", `<div class="n" style="font-size:18px"><span class="dot"></span>${s.k}-${["prod", "stage", "dev", "edge"][j]}</div><div class="s">${s.sub.split(" · ")[0].toLowerCase()} · ${["eu", "us", "me", "ap"][j]}</div>`, "height:96px;margin-bottom:14px"));
   $("#dashCols").appendChild(col);
 });
-for (let i = 0; i < 6; i++) $("#flyFiles").appendChild(el("div", "ff glass mono", `${["prod.yaml", "edge.yaml", "gpu.yaml", "qa.yaml", "aks.yaml", "eks.yaml"][i]}`, "position:absolute;left:250px;top:700px;padding:10px 16px;font-size:18px;color:#cfe0ff;border-radius:10px"));
+for (let i = 0; i < 6; i++) $("#flyFiles").appendChild(el("div", "ff glass mono", `${["prod.yaml", "edge.yaml", "gpu.yaml", "qa.yaml", "aks.yaml", "eks.yaml"][i]}`, `position:absolute;left:${V ? 470 : 250}px;top:${V ? 1580 : 700}px;padding:10px 16px;font-size:18px;color:#cfe0ff;border-radius:10px`));
 (function () {
   const h = $("#hundred");
   for (let i = 0; i < 100; i++) {
     const c = i % 10, r = Math.floor(i / 10);
-    h.appendChild(el("div", "hd", "", `position:absolute;left:${c * 100 + 30}px;top:${r * 62 + 10}px;width:40px;height:40px;border-radius:12px;background:#151f34;border:2px solid #2a3a58`));
+    h.appendChild(el("div", "hd", "", `position:absolute;left:${c * 100 + 30}px;top:${r * (V ? 98 : 62) + 10}px;width:40px;height:40px;border-radius:12px;background:#151f34;border:2px solid #2a3a58`));
   }
 })();
 
@@ -413,13 +467,15 @@ function showRes(k) {
 }
 showRes("Pods");
 (function () {
-  const N = { ing: [180, 390, "Ingress", "web.example.com", "#38bdf8"], svc: [480, 390, "Service", "web", "#4f8cff"], dep: [780, 390, "Deployment", "web", "#7c5cff"], rs: [1060, 390, "ReplicaSet", "web-7d9f", "#a78bfa"],
+  const N = V ? { ing: [500, 150, "Ingress", "web.example.com", "#38bdf8"], svc: [500, 380, "Service", "web", "#4f8cff"], dep: [500, 610, "Deployment", "web", "#7c5cff"], rs: [500, 840, "ReplicaSet", "web-7d9f", "#a78bfa"],
+    p1: [180, 1090, "Pod", "web-7d9f-a1", "#2ec27e"], p2: [500, 1090, "Pod", "web-7d9f-b2", "#2ec27e"], p3: [820, 1090, "Pod", "web-7d9f-c3", "#2ec27e"], cm: [830, 520, "ConfigMap", "web-config", "#f5a524"], sec: [170, 280, "Secret", "web-tls", "#f2545b"] } : { ing: [180, 390, "Ingress", "web.example.com", "#38bdf8"], svc: [480, 390, "Service", "web", "#4f8cff"], dep: [780, 390, "Deployment", "web", "#7c5cff"], rs: [1060, 390, "ReplicaSet", "web-7d9f", "#a78bfa"],
     p1: [1330, 220, "Pod", "web-7d9f-a1", "#2ec27e"], p2: [1330, 390, "Pod", "web-7d9f-b2", "#2ec27e"], p3: [1330, 560, "Pod", "web-7d9f-c3", "#2ec27e"], cm: [780, 630, "ConfigMap", "web-config", "#f5a524"], sec: [480, 630, "Secret", "web-tls", "#f2545b"] };
   const E = [["ing", "svc"], ["svc", "dep"], ["dep", "rs"], ["rs", "p1"], ["rs", "p2"], ["rs", "p3"], ["cm", "dep"], ["sec", "ing"]];
   let s = "";
-  E.forEach(([a, b], i) => { const [x1, y1] = N[a], [x2, y2] = N[b]; s += `<path class="te" id="te${i}" d="M${x1},${y1} C${(x1 + x2) / 2},${y1} ${(x1 + x2) / 2},${y2} ${x2},${y2}" stroke="#4a5f8a" stroke-width="3" fill="none"/><circle class="tp" data-e="${i}" r="5" fill="#9fc0ff"/>`; });
+  E.forEach(([a, b], i) => { const [x1, y1] = N[a], [x2, y2] = N[b]; const d = V && Math.abs(x1 - x2) < 400 ? `M${x1},${y1} C${x1},${(y1 + y2) / 2} ${x2},${(y1 + y2) / 2} ${x2},${y2}` : `M${x1},${y1} C${(x1 + x2) / 2},${y1} ${(x1 + x2) / 2},${y2} ${x2},${y2}`; s += `<path class="te" id="te${i}" d="${d}" stroke="#4a5f8a" stroke-width="3" fill="none"/><circle class="tp" data-e="${i}" r="5" fill="#9fc0ff"/>`; });
   Object.entries(N).forEach(([k, [x, y, kind, name, c]]) => { s += `<g class="tn" id="tn-${k}" transform="translate(${x} ${y})"><rect x="-110" y="-44" width="220" height="88" rx="16" fill="#121b2e" stroke="${c}" stroke-width="2.5"/><text x="0" y="-8" text-anchor="middle" font-family="Inter" font-size="15" font-weight="700" fill="${c}" letter-spacing="2">${kind.toUpperCase()}</text><text x="0" y="20" text-anchor="middle" font-family="DejaVu Sans Mono" font-size="17" fill="#e8edf7">${name}</text></g>`; });
   $("#topoSvg").innerHTML = s;
+  if (V) { $("#topoSvg").setAttribute("width", 1000); $("#topoSvg").setAttribute("height", 1300); $("#topoSvg").setAttribute("viewBox", "0 0 1000 1300"); }
 })();
 $("#okLogs").innerHTML = [...Array(40)].map((_, i) => `<div style="white-space:nowrap"><span style="color:#6b7895">10:42:${String(10 + i).padStart(2, "0")}</span> <span style="color:${i % 7 === 3 ? "#f5c26b" : "#7be0a9"}">${i % 7 === 3 ? "WARN" : "INFO"}</span> ${["GET /api/cart 200 12ms", "GET /health 200 1ms", "POST /api/order 201 48ms", "cache hit ratio 0.97", "GET /api/items 200 9ms", "worker heartbeat ok"][i % 6]}</div>`).join("");
 $("#clock1").innerHTML = `<svg width="420" height="420" viewBox="-110 -110 220 220"><circle r="100" fill="#0e1524" stroke="#3a4d74" stroke-width="6"/>${[...Array(12)].map((_, i) => { const a = i * Math.PI / 6; return `<line x1="${Math.sin(a) * 82}" y1="${-Math.cos(a) * 82}" x2="${Math.sin(a) * 92}" y2="${-Math.cos(a) * 92}" stroke="#6b7895" stroke-width="${i % 3 ? 2 : 4}"/>`; }).join("")}<path id="clockArc" fill="rgba(242,84,91,.25)"/><line id="hMin" x1="0" y1="0" x2="0" y2="-76" stroke="#fff" stroke-width="5" stroke-linecap="round"/><line id="hHr" x1="0" y1="0" x2="0" y2="-48" stroke="#c9d3e6" stroke-width="7" stroke-linecap="round"/><circle r="7" fill="#fff"/></svg><div id="clockLbl" style="font:900 72px Inter;margin-top:10px"><span id="clockTxt">1 hour</span></div>`;
@@ -463,7 +519,7 @@ show("#s1", 0);
 tl.fromTo("#wheel", { scale: .2, opacity: 0, rotation: -120 }, { scale: 1, opacity: 1, rotation: 0, duration: 1.2, ease: "back.out(1.4)" }, .15);
 tl.to("#wheelG", { rotation: 200, svgOrigin: "0 0", duration: 9, ease: "none" }, 0);
 $$(".cmd").forEach((c, i) => {
-  tl.fromTo(c, { opacity: 0, scale: .6, x: (960 - parseFloat(c.style.left) - 150) * .6, y: (540 - parseFloat(c.style.top)) * .6 }, { opacity: 1, scale: 1, x: 0, y: 0, duration: .55, ease: E3 }, .55 + i * .2);
+  tl.fromTo(c, { opacity: 0, scale: .6, x: (CX - parseFloat(c.style.left) - 150) * .6, y: (CY - parseFloat(c.style.top)) * .6 }, { opacity: 1, scale: 1, x: 0, y: 0, duration: .55, ease: E3 }, .55 + i * .2);
   tl.to(c, { y: "+=" + (i % 2 ? -30 : 30), x: "+=" + (i % 3 - 1) * 30, duration: 4, ease: "sine.inOut" }, 1.2 + i * .2);
 });
 tl.to("#cam", { scale: 1.06, duration: 3.4, ease: "sine.inOut" }, 0);
@@ -471,8 +527,8 @@ tl.to("#cam", { scale: 1.06, duration: 3.4, ease: "sine.inOut" }, 0);
 tl.to(".cmd", { opacity: .25, duration: .4 }, 3.55);
 tl.to("#wheel", { scale: .45, opacity: 0, duration: .45, ease: "power2.in" }, 3.55);
 flash(3.62, .35, .35);
-tl.fromTo(".sw", { scale: 0, opacity: 0, x: (i, e) => 960 - parseFloat(e.style.left) - 32, y: (i, e) => 540 - parseFloat(e.style.top) - 32 },
-  { scale: 1, opacity: 1, x: 0, y: 0, duration: .65, ease: "back.out(1.6)", stagger: { each: .012, from: "center", grid: [6, 11] } }, 3.62);
+tl.fromTo(".sw", { scale: 0, opacity: 0, x: (i, e) => CX - parseFloat(e.style.left) - 32, y: (i, e) => CY - parseFloat(e.style.top) - 32 },
+  { scale: 1, opacity: 1, x: 0, y: 0, duration: .65, ease: "back.out(1.6)", stagger: { each: .012, from: "center", grid: V ? [10, 7] : [6, 11] } }, 3.62);
 tl.to("#cam", { scale: 1, duration: .6, ease: E3 }, 3.62);
 // 5.0 kubeconfig files everywhere
 tl.to(".sw", { opacity: .28, duration: .5 }, 4.95);
@@ -508,7 +564,7 @@ tl.to(["#pLogs", "#pEvents", "#pMetrics"], { y: 90, opacity: .45, filter: "blur(
 tl.fromTo("#timer", { opacity: 0, scale: 1.5 }, { opacity: 1, scale: 1, duration: .45, ease: "power4.out" }, 15.64);
 tl.to("#redwash", { opacity: .5, duration: .4 }, 15.7);
 // 18.18 implode
-tl.to("#s2 > *", { scale: 0, x: (i, e) => 960 - (e.offsetLeft + e.offsetWidth / 2), y: (i, e) => 540 - (e.offsetTop + e.offsetHeight / 2), opacity: 0, filter: "blur(12px)", duration: 1.15, ease: "power3.in", stagger: .05 }, 18.2);
+tl.to("#s2 > *", { scale: 0, x: (i, e) => CX - (e.offsetLeft + e.offsetWidth / 2), y: (i, e) => CY - (e.offsetTop + e.offsetHeight / 2), opacity: 0, filter: "blur(12px)", duration: 1.15, ease: "power3.in", stagger: .05 }, 18.2);
 tl.to("#redwash", { opacity: 0, duration: .8 }, 18.3);
 tl.to(P, { red: 0, implode: 1, duration: 1.3, ease: "power2.in" }, 18.2);
 tl.to("#cam", { scale: 1.12, duration: 1.4, ease: "power2.in" }, 18.2);
@@ -526,7 +582,7 @@ tl.fromTo("#logo3 .spark", { scale: 0, rotation: -90, transformOrigin: "50% 50%"
 tl.from(".w3c", { y: 140, opacity: 0, rotationX: -90, duration: .7, stagger: .045, ease: E3 }, 20.45);
 tl.to(P, { neb: 1, duration: 2 }, 20.2);
 // 21.8 IDE rises
-tl.to("#logoWrap", { scale: .32, x: -770, y: -420, opacity: 0, duration: .7, ease: "power3.inOut" }, 21.75);
+tl.to("#logoWrap", { scale: .32, x: V ? -380 : -770, y: V ? -860 : -420, opacity: 0, duration: .7, ease: "power3.inOut" }, 21.75);
 tl.fromTo("#ide3", { opacity: 0, y: 500, rotationX: 38, scale: .82 }, { opacity: 1, y: 30, rotationX: 16, scale: .9, duration: 1.2, ease: "power3.out" }, 21.85);
 tl.set(".ic3", { opacity: 0 }, 21.8);
 $$(".ic3").forEach((c, i) => tl.fromTo(c, { opacity: 0, x: R(-1200, 1200), y: R(-900, 900), rotation: R(-40, 40), scale: .5 }, { opacity: 1, x: 0, y: 0, rotation: 0, scale: 1, duration: .8, ease: "power3.out" }, 23.2 + i * .1));
@@ -556,17 +612,18 @@ tl.to(["#srcSvg", ".src"], { opacity: 0, duration: .5 }, 33.7);
 tl.fromTo("#dash", { opacity: 0, scale: .6 }, { opacity: 1, scale: 1, duration: .8, ease: E3 }, 33.85);
 $$(".dcol").forEach((c, i) => tl.fromTo(c.children, { opacity: 0, y: -260 + i * 0, x: (2 - i) * 60, scale: .6 }, { opacity: 1, y: 0, x: 0, scale: 1, duration: .55, ease: "back.out(1.4)", stagger: .07 }, 34.1 + i * .16));
 // 36.55 sync folders
-tl.to("#dash", { scale: .82, x: 210, y: -30, duration: .7, ease: E2 }, 36.4);
+tl.to("#dash", V ? { scale: .74, x: 0, y: -190, duration: .7, ease: E2 } : { scale: .82, x: 210, y: -30, duration: .7, ease: E2 }, 36.4);
 tl.fromTo("#folder", { opacity: 0, x: -200 }, { opacity: 1, x: 0, duration: .55, ease: E3 }, 36.5);
 tl.to("#syncIcon", { rotation: 720, svgOrigin: "0 0", duration: 2.8, ease: "power1.inOut" }, 36.6);
 tl.set("#flyFiles", { opacity: 1 }, 36.6);
-$$(".ff").forEach((f, i) => tl.fromTo(f, { opacity: 0, x: 0, y: 0, scale: .6 }, { keyframes: [{ opacity: 1, x: 160, y: -120 - i * 30, scale: 1, duration: .35 }, { x: 640 + (i % 3) * 230, y: -400 + Math.floor(i / 3) * 120, opacity: 0, scale: .7, duration: .55, ease: "power2.in" }] }, 36.9 + i * .3));
+$$(".ff").forEach((f, i) => tl.fromTo(f, { opacity: 0, x: 0, y: 0, scale: .6 }, { keyframes: V ? [{ opacity: 1, x: (i % 2 ? 120 : -120), y: -140 - i * 25, scale: 1, duration: .35 }, { x: -300 + (i % 3) * 260, y: -820 + Math.floor(i / 3) * 200, opacity: 0, scale: .7, duration: .55, ease: "power2.in" }] : [{ opacity: 1, x: 160, y: -120 - i * 30, scale: 1, duration: .35 }, { x: 640 + (i % 3) * 230, y: -400 + Math.floor(i / 3) * 120, opacity: 0, scale: .7, duration: .55, ease: "power2.in" }] }, 36.9 + i * .3));
 tl.fromTo("#syncPill", { scale: 1.4 }, { scale: 1, duration: .4, ease: "back.out(3)", immediateRender: false }, 38.9);
 // 39.81 only the cluster you open
 tl.to(["#dash", "#folder"], { opacity: 0, scale: .9, duration: .45 }, 39.55);
 tl.set("#hundred", { opacity: 1 }, 39.75);
 tl.fromTo(".hd", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: .35, ease: "back.out(2)", stagger: { each: .006, from: "random" } }, 39.8);
-tl.fromTo("#cur4", { opacity: 0, x: 1500, y: 1000 }, { opacity: 1, x: 1101, y: 494, duration: .75, ease: "power2.inOut" }, 40.0);
+const aimEl = (sel, fx, fy) => () => { const r = $(sel).getBoundingClientRect(); return { x: r.left + r.width * fx - 9, y: r.top + r.height * fy - 4 }; };
+tl.fromTo("#cur4", { opacity: 0, x: W - 300, y: H - 100 }, { opacity: 1, x: () => aimEl(".hd:nth-child(47)", .5, .5)().x, y: () => aimEl(".hd:nth-child(47)", .5, .5)().y, duration: .75, ease: "power2.inOut" }, 40.0);
 tl.to("#cur4", { scale: .82, duration: .07, yoyo: true, repeat: 1 }, 40.75);
 const pick = 46; // row 4, col 6
 tl.to(`.hd:nth-child(${pick + 1})`, { backgroundColor: "#2ec27e", borderColor: "#7bf0b4", boxShadow: "0 0 40px #2ec27e", scale: 1.35, duration: .3, ease: "back.out(3)" }, 40.8);
@@ -637,7 +694,7 @@ tl.fromTo("#cause", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: .45, ea
 tl.fromTo("#cause", { boxShadow: "0 0 0 rgba(245,165,36,0)" }, { boxShadow: "0 0 40px rgba(245,165,36,.45)", duration: .4, yoyo: true, repeat: 1, immediateRender: false }, 71.3);
 tl.fromTo("#fix", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: .45, ease: E3 }, 72.35);
 const aim = (sel, fx, fy) => () => { const r = $(sel).getBoundingClientRect(); return { x: r.left + r.width * fx - 9, y: r.top + r.height * fy - 4 }; };
-tl.fromTo("#cur6", { opacity: 0, x: 1650, y: 1060 }, { opacity: 1, x: () => aim("#approve", .55, .6)().x, y: () => aim("#approve", .55, .6)().y, duration: .8, ease: "power2.inOut" }, 73.1);
+tl.fromTo("#cur6", { opacity: 0, x: W - 270, y: H - 20 }, { opacity: 1, x: () => aim("#approve", .55, .6)().x, y: () => aim("#approve", .55, .6)().y, duration: .8, ease: "power2.inOut" }, 73.1);
 tl.to("#cur6", { scale: .82, duration: .07, yoyo: true, repeat: 1 }, 74.0);
 tl.to("#approve", { scale: .94, duration: .08, yoyo: true, repeat: 1 }, 74.0);
 tl.fromTo("#applied", { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: .3 }, 74.2);
@@ -763,10 +820,10 @@ updaters.push((t) => { // S7 3D ring
   const tiles = $$(".ftw"), n = tiles.length, base = (t - 78.4) * 13 - 25;
   tiles.forEach((e, i) => {
     const a = (i / n) * 360 + base, rad = a * Math.PI / 180;
-    const depth = (Math.cos(rad) + 1) / 2, x = Math.sin(rad) * 760;
-    e.style.left = (x - 165) + "px"; e.style.top = (-95 + 120 * depth - 60) + "px";
+    const depth = (Math.cos(rad) + 1) / 2, x = V ? -140 * (1 - depth) * Math.sign(Math.sin(rad)) : Math.sin(rad) * 760;
+    e.style.left = (x - 165) + "px"; e.style.top = (V ? -95 + Math.sin(rad) * 640 : -95 + 120 * depth - 60) + "px";
     e.style.zIndex = String(Math.round(depth * 1000));
-    e.style.transform = `scale(${.58 + .48 * depth})`;
+    e.style.transform = `scale(${(.58 + .48 * depth) * (V ? 1.3 : 1)})`;
     e.style.filter = `brightness(${.45 + .6 * depth}) blur(${(1 - depth) * 2.2}px)`;
   });
   $("#ring").style.transform = `translate(-50%,-50%) scale(${.92 + .08 * Math.sin((t - 78.4) / 3)})`;
@@ -774,26 +831,26 @@ updaters.push((t) => { // S7 3D ring
 
 // ---------- canvases ----------
 const bg = $("#bg").getContext("2d"), fx = $("#fx").getContext("2d"), gr = $("#grain").getContext("2d");
-const stars = [...Array(260)].map(() => ({ x: R(0, 1920), y: R(0, 1080), z: R(.2, 1), tw: R(0, 6) }));
+const stars = [...Array(260)].map(() => ({ x: R(0, W), y: R(0, H), z: R(.2, 1), tw: R(0, 6) }));
 function drawBG(t) {
   const g = bg; g.globalCompositeOperation = "source-over";
-  g.fillStyle = "#05070d"; g.fillRect(0, 0, 1920, 1080);
+  g.fillStyle = "#05070d"; g.fillRect(0, 0, W, H);
   const hueShift = P.hue;
   const blobs = [
-    [300 + Math.sin(t * .11) * 220, 200 + Math.cos(t * .09) * 120, 900, hueShift ? "rgba(124,92,255,.42)" : "rgba(43,75,255,.40)"],
-    [1600 + Math.cos(t * .08) * 220, 900 + Math.sin(t * .1) * 140, 950, "rgba(124,58,237,.38)"],
-    [960 + Math.sin(t * .05) * 300, 520, 700, hueShift ? "rgba(192,132,252,.22)" : "rgba(30,144,255,.20)"],
+    [W * .16 + Math.sin(t * .11) * 220, H * .19 + Math.cos(t * .09) * 120, 900, hueShift ? "rgba(124,92,255,.42)" : "rgba(43,75,255,.40)"],
+    [W * .83 + Math.cos(t * .08) * 220, H * .83 + Math.sin(t * .1) * 140, 950, "rgba(124,58,237,.38)"],
+    [CX + Math.sin(t * .05) * 300, CY - 20, 700, hueShift ? "rgba(192,132,252,.22)" : "rgba(30,144,255,.20)"],
   ];
   const k = .55 + .45 * P.neb;
-  blobs.forEach(([x, y, r, c]) => { const gg = g.createRadialGradient(x, y, 0, x, y, r); gg.addColorStop(0, c); gg.addColorStop(1, "rgba(0,0,0,0)"); g.globalAlpha = k; g.fillStyle = gg; g.fillRect(0, 0, 1920, 1080); });
-  if (P.red > 0) { const gg = g.createRadialGradient(960, 540, 0, 960, 540, 1100); gg.addColorStop(0, `rgba(140,20,30,${.5 * P.red})`); gg.addColorStop(1, "rgba(0,0,0,0)"); g.globalAlpha = 1; g.fillStyle = gg; g.fillRect(0, 0, 1920, 1080); }
+  blobs.forEach(([x, y, r, c]) => { const gg = g.createRadialGradient(x, y, 0, x, y, r); gg.addColorStop(0, c); gg.addColorStop(1, "rgba(0,0,0,0)"); g.globalAlpha = k; g.fillStyle = gg; g.fillRect(0, 0, W, H); });
+  if (P.red > 0) { const gg = g.createRadialGradient(CX, CY, 0, CX, CY, 1100); gg.addColorStop(0, `rgba(140,20,30,${.5 * P.red})`); gg.addColorStop(1, "rgba(0,0,0,0)"); g.globalAlpha = 1; g.fillStyle = gg; g.fillRect(0, 0, W, H); }
   g.globalAlpha = 1;
   // stars + warp
   stars.forEach((s) => {
-    let x = (s.x - t * 14 * s.z) % 1920; if (x < 0) x += 1920;
+    let x = (s.x - t * 14 * s.z) % W; if (x < 0) x += W;
     const a = (.35 + .65 * Math.abs(Math.sin(t * .8 + s.tw))) * s.z;
     if (P.warp > .02) {
-      const dx = x - 960, dy = s.y - 540, len = 1 + P.warp * 60 * s.z;
+      const dx = x - CX, dy = s.y - CY, len = 1 + P.warp * 60 * s.z;
       g.strokeStyle = `rgba(200,220,255,${a})`; g.lineWidth = s.z * 2; g.beginPath(); g.moveTo(x, s.y); g.lineTo(x + dx / 900 * len * 6, s.y + dy / 900 * len * 6); g.stroke();
     } else { g.fillStyle = `rgba(210,225,255,${a})`; g.fillRect(x, s.y, s.z * 2.2, s.z * 2.2); }
   });
@@ -801,18 +858,18 @@ function drawBG(t) {
   const ga = P.grid * (.5 + .5 * P.neb);
   if (ga > .01) {
     g.save(); g.globalAlpha = ga * .5; g.strokeStyle = "#4f8cff"; g.lineWidth = 1.2;
-    const hz = 700, off = (t * 40) % 80;
-    for (let i = 0; i < 14; i++) { const z = (i * 80 + off); const y = hz + Math.pow(z / 1120, 2.2) * 380; g.globalAlpha = ga * .45 * (z / 1120); g.beginPath(); g.moveTo(0, y); g.lineTo(1920, y); g.stroke(); }
-    for (let i = -16; i <= 16; i++) { g.globalAlpha = ga * .25; g.beginPath(); g.moveTo(960 + i * 30, hz); g.lineTo(960 + i * 260, 1080); g.stroke(); }
+    const hz = H * .65, off = (t * 40) % 80;
+    for (let i = 0; i < 14; i++) { const z = (i * 80 + off); const y = hz + Math.pow(z / 1120, 2.2) * (H - hz); g.globalAlpha = ga * .45 * (z / 1120); g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
+    for (let i = -16; i <= 16; i++) { g.globalAlpha = ga * .25; g.beginPath(); g.moveTo(CX + i * 30, hz); g.lineTo(CX + i * 260, H); g.stroke(); }
     g.restore();
   }
 }
 // particle bursts: [time, x, y, count, speed, colors, life, gravity]
-const bursts = [[20.2, 960, 440, 160, 900, ["#ffffff", "#9db8ff", "#c084fc"], 1.6, 0], [3.62, 960, 540, 60, 700, ["#4f8cff", "#7c5cff"], 1.0, 0], [90.33, 960, 600, 220, 1200, ["#2ec27e", "#4f8cff", "#f5a524", "#c084fc", "#ffffff"], 2.4, 900], [94.67, 960, 380, 120, 800, ["#ffffff", "#9db8ff", "#c084fc"], 1.5, 0], [76.95, 1250, 540, 70, 700, ["#2ec27e", "#ffffff"], 1.1, 0], [63.55, 960, 540, 90, 900, ["#c084fc", "#ffffff"], 1.2, 0]]
+const bursts = [[20.2, CX, CY - 100, 160, 900, ["#ffffff", "#9db8ff", "#c084fc"], 1.6, 0], [3.62, CX, CY, 60, 700, ["#4f8cff", "#7c5cff"], 1.0, 0], [90.33, CX, V ? 960 : 600, 220, 1200, ["#2ec27e", "#4f8cff", "#f5a524", "#c084fc", "#ffffff"], 2.4, 900], [94.67, CX, V ? CY - 260 : 380, 120, 800, ["#ffffff", "#9db8ff", "#c084fc"], 1.5, 0], [76.95, V ? CX : 1250, V ? CY + 220 : 540, 70, 700, ["#2ec27e", "#ffffff"], 1.1, 0], [63.55, CX, CY, 90, 900, ["#c084fc", "#ffffff"], 1.2, 0]]
   .map(([t0, x, y, n, sp, cols, life, gv]) => ({ t0, x, y, life, gv, ps: [...Array(n)].map(() => { const a = R(0, Math.PI * 2), v = R(.2, 1) * sp; return { vx: Math.cos(a) * v, vy: Math.sin(a) * v - (gv ? R(200, 700) : 0), c: cols[Math.floor(rnd() * cols.length)], s: R(2, 6), rot: R(0, 6) }; }) }));
-const implodeP = [...Array(200)].map(() => ({ x: R(0, 1920), y: R(0, 1080), d: R(0, .4), c: ["#ff8a8f", "#9fb0cf", "#f5c26b", "#4f8cff"][Math.floor(rnd() * 4)] }));
+const implodeP = [...Array(200)].map(() => ({ x: R(0, W), y: R(0, H), d: R(0, .4), c: ["#ff8a8f", "#9fb0cf", "#f5c26b", "#4f8cff"][Math.floor(rnd() * 4)] }));
 function drawFX(t) {
-  const g = fx; g.clearRect(0, 0, 1920, 1080);
+  const g = fx; g.clearRect(0, 0, W, H);
   bursts.forEach((b) => {
     const dt = t - b.t0; if (dt < 0 || dt > b.life) return;
     const fade = 1 - dt / b.life;
@@ -824,10 +881,10 @@ function drawFX(t) {
     });
   });
   if (P.implode > 0 && P.implode < 1) {
-    implodeP.forEach((p) => { const u = clamp((P.implode - p.d) / (1 - p.d), 0, 1), k = u * u; const x = p.x + (960 - p.x) * k, y = p.y + (540 - p.y) * k;
-      g.globalAlpha = 1 - u * .3; g.strokeStyle = p.c; g.lineWidth = 2; g.beginPath(); g.moveTo(x, y); g.lineTo(x + (960 - x) * .08, y + (540 - y) * .08); g.stroke(); });
+    implodeP.forEach((p) => { const u = clamp((P.implode - p.d) / (1 - p.d), 0, 1), k = u * u; const x = p.x + (CX - p.x) * k, y = p.y + (CY - p.y) * k;
+      g.globalAlpha = 1 - u * .3; g.strokeStyle = p.c; g.lineWidth = 2; g.beginPath(); g.moveTo(x, y); g.lineTo(x + (CX - x) * .08, y + (CY - y) * .08); g.stroke(); });
   }
-  if (t > 19.3 && t < 20.3) { const k = clamp((t - 19.3) / .9, 0, 1); const r = 4 + k * 10; g.globalAlpha = 1; const gg = g.createRadialGradient(960, 540, 0, 960, 540, r * 8); gg.addColorStop(0, "#fff"); gg.addColorStop(.2, "rgba(170,190,255,.8)"); gg.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gg; g.beginPath(); g.arc(960, 540, r * 8, 0, Math.PI * 2); g.fill(); }
+  if (t > 19.3 && t < 20.3) { const k = clamp((t - 19.3) / .9, 0, 1); const r = 4 + k * 10; g.globalAlpha = 1; const gg = g.createRadialGradient(CX, CY, 0, CX, CY, r * 8); gg.addColorStop(0, "#fff"); gg.addColorStop(.2, "rgba(170,190,255,.8)"); gg.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gg; g.beginPath(); g.arc(CX, CY, r * 8, 0, Math.PI * 2); g.fill(); }
   g.globalAlpha = 1;
 }
 let gseed = 1;
