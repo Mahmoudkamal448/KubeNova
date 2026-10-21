@@ -23,7 +23,9 @@ button { font: inherit; }
 .rail button:hover { background: var(--bg3); color: var(--fg); }
 .rail button.active { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
 .rail .spacer { flex: 1; }
-.topbar { display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid var(--border); background: var(--panel); -webkit-app-region: drag; }
+.topbar { display: flex; align-items: center; gap: 8px; padding: 0 12px;
+  /* Leave room for the window buttons drawn over the top bar (Windows/Linux). */
+  padding-right: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw) + 12px); border-bottom: 1px solid var(--border); background: var(--panel); -webkit-app-region: drag; }
 .topbar > * { -webkit-app-region: no-drag; }
 .main { display: grid; grid-template-rows: 1fr auto; overflow: hidden; position: relative; }
 .content { overflow: hidden; display: flex; min-height: 0; }

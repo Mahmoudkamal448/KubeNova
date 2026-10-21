@@ -10,5 +10,6 @@ contextBridge.exposeInMainWorld("kubenova", {
   rancherBrowserLogin: (opts: { url: string; serverId: string }) => ipcRenderer.invoke("rancher:browserLogin", opts),
   rancherBrowserLoginCancel: () => ipcRenderer.invoke("rancher:browserLoginCancel"),
   rancherClipboard: () => ipcRenderer.invoke("rancher:clipboard"),
+  setWindowTheme: (dark: boolean) => ipcRenderer.send("window:theme", dark),
   platform: process.platform,
 });

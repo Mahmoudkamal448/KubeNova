@@ -75,6 +75,7 @@
       "executableName": "kubenova"
     },
     "artifactName": "KubeNova-${version}-${os}-${arch}.${ext}",
+    "afterPack": "scripts/after-pack.cjs",
     "publish": [
       {
         "provider": "github",

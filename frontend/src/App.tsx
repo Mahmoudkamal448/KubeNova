@@ -67,6 +67,7 @@ export function App() {
   useEffect(() => {
     const t = s.theme === "system" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : s.theme;
     document.documentElement.dataset.theme = t === "light" ? "light" : "dark";
+    window.kubenova?.setWindowTheme?.(t !== "light");
     const custom = (window as any).__kubenovaThemes?.[s.theme];
     const root = document.documentElement.style;
     if (custom) for (const [k, v] of Object.entries(custom.colors || {})) root.setProperty(`--${k}`, String(v));

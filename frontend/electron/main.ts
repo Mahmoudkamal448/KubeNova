@@ -54,6 +54,14 @@ function startBackend() {
   });
 }
 
+const titleBarColors = (dark: boolean) =>
+  dark ? { color: "#0f1522", symbolColor: "#e5e9f0", height: 44 } : { color: "#ffffff", symbolColor: "#172033", height: 44 };
+
+ipcMain.on("window:theme", (e, dark: boolean) => {
+  const win = BrowserWindow.fromWebContents(e.sender);
+  if (win && process.platform !== "darwin") win.setTitleBarOverlay(titleBarColors(dark));
+});
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1600,
@@ -62,7 +70,11 @@ function createWindow() {
     minHeight: 700,
     backgroundColor: "#0b0f17",
     title: "KubeNova",
-    titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "default",
+    // macOS keeps its traffic lights inset; Windows and Linux draw their
+    // window buttons over KubeNova's own top bar instead of a system title
+    // bar and a light menu bar that clash with the app.
+    titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "hidden",
+    ...(process.platform === "darwin" ? {} : { titleBarOverlay: titleBarColors(true) }),
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,

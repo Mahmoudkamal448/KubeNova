@@ -11,6 +11,7 @@ declare global {
       rancherBrowserLogin?: (opts: { url: string; serverId: string }) => Promise<{ ok?: boolean; cancelled?: boolean; noBrowser?: boolean; error?: string }>;
       rancherBrowserLoginCancel?: () => Promise<void>;
       rancherClipboard?: () => Promise<string>;
+      setWindowTheme?: (dark: boolean) => void;
       platform: string;
     };
   }
