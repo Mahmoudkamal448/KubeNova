@@ -1,0 +1,844 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>KubeNova Launch Film</title>
+<style>
+:root {
+  --bg: #05070d; --panel: #0e1422; --panel2: #121a2b; --line: #22304a; --line2: #2e3f60;
+  --fg: #e8edf7; --fg2: #a5b1c8; --fg3: #6b7895;
+  --blue: #4f8cff; --violet: #7c5cff; --pink: #c084fc; --cyan: #38bdf8;
+  --ok: #2ec27e; --warn: #f5a524; --err: #f2545b; --k8s: #326ce5;
+  --mono: "DejaVu Sans Mono", monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); color: var(--fg); font-family: Inter, sans-serif; }
+canvas { position: absolute; inset: 0; }
+#cam { position: absolute; inset: 0; transform-origin: 50% 50%; }
+.scene { position: absolute; inset: 0; opacity: 0; visibility: hidden; perspective: 1800px; }
+.abs { position: absolute; }
+.center { position: absolute; left: 50%; top: 50%; }
+.grad { background: linear-gradient(100deg, #7fb0ff 0%, #8b6cff 55%, #d49bff 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.glass { background: linear-gradient(180deg, rgba(30,42,68,.78), rgba(14,20,34,.86)); border: 1px solid rgba(120,150,220,.22); border-radius: 18px; box-shadow: 0 30px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06); }
+.chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; font: 600 18px/1 Inter; white-space: nowrap; }
+.mono { font-family: var(--mono); }
+
+/* windows */
+.win { position: absolute; border-radius: 14px; overflow: hidden; background: #0c1220; border: 1px solid #2a3a58; box-shadow: 0 40px 100px rgba(0,0,0,.6); }
+.win .tb { height: 38px; background: #151e30; display: flex; align-items: center; gap: 8px; padding: 0 14px; font: 600 15px Inter; color: var(--fg2); border-bottom: 1px solid #22304a; }
+.win .tb i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.win .tb i:nth-child(1) { background: #ff5f57; } .win .tb i:nth-child(2) { background: #febc2e; } .win .tb i:nth-child(3) { background: #28c840; }
+.win .tb span { margin-left: 8px; }
+.win .body { padding: 16px; font: 15px/1.7 var(--mono); color: #9fb0cf; }
+
+/* KubeNova logo */
+.logo { width: 220px; height: 220px; border-radius: 52px; background: linear-gradient(135deg, #5b97ff, #7c5cff); display: grid; place-items: center; position: relative;
+  box-shadow: 0 0 120px rgba(110,120,255,.65), inset 0 3px 0 rgba(255,255,255,.3); font: 900 136px/1 Inter; color: #fff; }
+.logo .spark { position: absolute; right: 30px; top: 26px; width: 44px; height: 44px; }
+
+/* ide mock */
+.ide { position: absolute; width: 1440px; height: 820px; border-radius: 18px; overflow: hidden; background: #0b1120; border: 1px solid #2b3c5d; box-shadow: 0 60px 140px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.03); display: grid; grid-template-columns: 76px 1fr; grid-template-rows: 64px 1fr; }
+.ide .rail { grid-row: 1 / 3; background: #0f1626; border-right: 1px solid #1f2b43; display: flex; flex-direction: column; align-items: center; padding-top: 14px; gap: 10px; }
+.ide .rail .lg { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #5b97ff, #7c5cff); display: grid; place-items: center; font: 900 24px Inter; margin-bottom: 8px; }
+.ide .rail b { width: 44px; height: 40px; border-radius: 10px; background: #182238; display: block; }
+.ide .rail b.on { background: rgba(79,140,255,.25); box-shadow: inset 0 0 0 1px rgba(79,140,255,.5); }
+.ide .top { background: #0f1626; border-bottom: 1px solid #1f2b43; display: flex; align-items: center; gap: 14px; padding: 0 22px; }
+.ide .sel { height: 38px; padding: 0 16px; border-radius: 9px; background: #121b2e; border: 1px solid #263552; display: flex; align-items: center; gap: 10px; font: 600 17px Inter; color: var(--fg2); }
+.ide .main { padding: 26px 28px; overflow: hidden; position: relative; }
+.ccard { height: 112px; border-radius: 14px; background: #121b2e; border: 1px solid #263552; padding: 16px 18px; }
+.ccard .n { font: 700 20px Inter; display: flex; align-items: center; gap: 10px; }
+.ccard .s { font: 14px var(--mono); color: var(--fg3); margin-top: 6px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: #56607a; flex: none; display: inline-block; }
+.dot.ok { background: var(--ok); box-shadow: 0 0 12px var(--ok); }
+.tag { font: 600 13px Inter; padding: 4px 10px; border-radius: 999px; background: #1d2840; color: var(--fg2); }
+
+/* resource table */
+.tbl { width: 100%; border-collapse: collapse; font: 17px Inter; }
+.tbl th { text-align: left; font: 600 14px Inter; color: var(--fg3); letter-spacing: .08em; text-transform: uppercase; padding: 10px 14px; border-bottom: 1px solid #22304a; }
+.tbl td { padding: 15px 14px; border-bottom: 1px solid #172238; color: var(--fg2); }
+.tbl td:first-child { color: var(--fg); font-weight: 600; }
+
+/* feature tiles */
+.tile { position: absolute; width: 330px; height: 190px; padding: 26px 28px; }
+.tile .ic { width: 62px; height: 62px; border-radius: 16px; display: grid; place-items: center; }
+.tile .t { font: 800 30px Inter; margin-top: 18px; letter-spacing: -.01em; }
+
+.bigword { font: 900 150px/1 Inter; letter-spacing: -.04em; }
+.label { font: 700 22px Inter; letter-spacing: .3em; text-transform: uppercase; color: var(--blue); }
+
+#grain { mix-blend-mode: overlay; opacity: .09; pointer-events: none; }
+#vig { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0,0,0,.6) 100%); }
+#redwash { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(242,84,91,.45) 100%); opacity: 0; }
+#flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+#fade { position: absolute; inset: 0; background: #000; opacity: 1; pointer-events: none; }
+</style>
+</head>
+<body>
+<canvas id="bg" width="1920" height="1080"></canvas>
+<div id="cam">
+  <!-- ============ S1: chaos ============ -->
+  <div class="scene" id="s1">
+    <div id="cmds" class="abs" style="inset:0"></div>
+    <svg id="wheel" class="center" width="300" height="300" viewBox="-100 -100 200 200"></svg>
+    <div id="swarm" class="abs" style="inset:0"></div>
+    <div id="files" class="abs" style="inset:0"></div>
+    <div id="tools" class="abs" style="inset:0"></div>
+  </div>
+
+  <!-- ============ S2: incident ============ -->
+  <div class="scene" id="s2">
+    <div id="alertCard" class="glass center" style="width:760px;padding:34px 40px;border-color:rgba(242,84,91,.6);box-shadow:0 0 0 1px rgba(242,84,91,.3),0 0 90px rgba(242,84,91,.35),0 40px 100px rgba(0,0,0,.6)">
+      <div style="display:flex;align-items:center;gap:14px;font:700 20px Inter;color:#ff8a8f;letter-spacing:.2em">
+        <span class="dot" style="background:var(--err);box-shadow:0 0 16px var(--err);width:16px;height:16px"></span>PRODUCTION
+      </div>
+      <div style="font:800 52px Inter;margin-top:16px;letter-spacing:-.02em">checkout-api</div>
+      <div style="display:flex;gap:12px;margin-top:20px">
+        <span class="chip mono" style="background:rgba(242,84,91,.18);color:#ff8a8f;font-size:22px">CrashLoopBackOff</span>
+        <span class="chip mono" style="background:#1d2840;color:var(--fg2);font-size:22px">restarts: <b id="restarts" style="color:#fff;margin-left:6px">14</b></span>
+      </div>
+    </div>
+    <div id="pLogs" class="win" style="left:110px;top:250px;width:560px;height:520px">
+      <div class="tb"><i></i><i></i><i></i><span>logs · checkout-api</span></div>
+      <div class="body" id="logLines" style="height:482px;overflow:hidden"></div>
+    </div>
+    <div id="pEvents" class="win" style="left:690px;top:250px;width:540px;height:520px">
+      <div class="tb"><i></i><i></i><i></i><span>events</span></div>
+      <div class="body" id="evLines"></div>
+    </div>
+    <div id="pMetrics" class="win" style="left:1250px;top:250px;width:560px;height:520px">
+      <div class="tb"><i></i><i></i><i></i><span>metrics · memory</span></div>
+      <svg id="memChart" width="560" height="482" viewBox="0 0 560 482"></svg>
+    </div>
+    <div id="timer" class="center" style="top:160px;text-align:center">
+      <div style="font:700 20px Inter;letter-spacing:.35em;color:#ff8a8f">DOWNTIME</div>
+      <div id="timerVal" class="mono" style="font:800 120px/1.1 var(--mono);color:#fff;text-shadow:0 0 40px rgba(242,84,91,.8)">00:00:00</div>
+    </div>
+  </div>
+
+  <!-- ============ S3: reveal ============ -->
+  <div class="scene" id="s3">
+    <div id="rings" class="abs" style="inset:0"></div>
+    <div id="logoWrap" class="center" style="text-align:center">
+      <div class="logo" id="logo3" style="margin:0 auto">K<svg class="spark" viewBox="-10 -10 20 20"><path d="M0 -10 L2.2 -2.2 L10 0 L2.2 2.2 L0 10 L-2.2 2.2 L-10 0 L-2.2 -2.2Z" fill="#fff"/></svg></div>
+      <div id="word3" style="font:900 132px/1 Inter;letter-spacing:-.035em;margin-top:40px"></div>
+    </div>
+    <div id="ide3" class="ide center">
+      <div class="rail"><div class="lg">K</div><b class="on"></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></div>
+      <div class="top"><div class="sel"><span class="dot ok"></span>prod-eu</div><div class="sel">All namespaces</div><div style="flex:1"></div><div class="sel" style="background:linear-gradient(135deg,#4f8cff,#7c5cff);color:#fff;border:0">✦ AI Assistant</div></div>
+      <div class="main">
+        <div style="font:800 34px Inter">Clusters <span class="tag" style="font-size:18px;vertical-align:middle">24</span></div>
+        <div id="ideGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:22px"></div>
+      </div>
+    </div>
+    <div id="sweep" class="abs" style="left:-600px;top:0;width:500px;height:1080px;background:linear-gradient(90deg,transparent,rgba(160,190,255,.16),transparent);transform:skewX(-18deg)"></div>
+    <div id="brackets" class="abs" style="inset:0"></div>
+  </div>
+
+  <!-- ============ S4: sources / dashboard / sync / lazy ============ -->
+  <div class="scene" id="s4">
+    <svg id="srcSvg" class="abs" style="left:0;top:0" width="1920" height="1080"></svg>
+    <div id="hub" class="center" style="width:190px;height:190px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,rgba(124,92,255,.35),rgba(79,140,255,.08) 60%,transparent 70%)">
+      <div class="logo" style="width:120px;height:120px;border-radius:30px;font-size:74px">K</div>
+    </div>
+    <div id="srcNodes" class="abs" style="inset:0"></div>
+    <div id="dash" class="glass center" style="width:1500px;height:760px;padding:30px 34px">
+      <div style="display:flex;align-items:center;gap:16px"><div style="font:800 34px Inter">All clusters</div><span class="chip" style="background:rgba(46,194,126,.14);color:var(--ok);font-size:16px" id="syncPill">● in sync</span></div>
+      <div id="dashCols" style="display:grid;grid-template-columns:repeat(5,1fr);gap:18px;margin-top:24px"></div>
+    </div>
+    <div id="folder" class="abs" style="left:150px;top:690px;width:300px;text-align:center">
+      <svg width="220" height="170" viewBox="0 0 220 170"><defs><linearGradient id="fg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b97ff"/><stop offset="1" stop-color="#7c5cff"/></linearGradient></defs>
+        <path d="M10 30 q0-14 14-14 h56 l16 18 h100 q14 0 14 14 v104 q0 14-14 14 H24 q-14 0-14-14z" fill="url(#fg1)"/><path d="M10 58 h200 v90 q0 14-14 14 H24 q-14 0-14-14z" fill="#3e6ff0"/>
+        <g id="syncIcon" transform="translate(110 106)"><path d="M-22 -4 a22 22 0 0 1 40 -10 M22 4 a22 22 0 0 1 -40 10" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M18 -22 l2 10 -10 -1z M-18 22 l-2 -10 10 1z" fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></g></svg>
+      <div class="mono" style="font-size:22px;color:#b9cdf5;margin-top:6px">~/kubeconfigs</div>
+    </div>
+    <div id="flyFiles" class="abs" style="inset:0"></div>
+    <div id="hundred" class="center" style="width:1000px;height:640px"></div>
+    <div id="beam" class="abs" style="left:0;top:0;width:10px;height:4px;background:linear-gradient(90deg,var(--ok),transparent);transform-origin:0 50%;opacity:0"></div>
+    <div id="latency" class="glass abs" style="left:1420px;top:300px;padding:22px 28px;text-align:left">
+      <div style="font:600 18px Inter;color:var(--fg2)">API latency</div><div style="font:900 64px Inter;color:var(--ok)">12<span style="font-size:30px;margin-left:6px">ms</span></div>
+    </div>
+    <div id="count100" class="glass abs" style="left:1420px;top:520px;padding:22px 28px">
+      <div style="font:600 18px Inter;color:var(--fg2)">Clusters</div><div style="font:900 64px Inter"><span id="c100">0</span></div>
+      <div style="font:600 17px Inter;color:var(--fg3);margin-top:4px">connected: <b style="color:var(--ok)">1</b></div>
+    </div>
+    <svg id="cur4" class="abs" width="54" height="54" viewBox="0 0 24 24" style="z-index:20;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))"><path d="M4 2l14 9-6.5 1.3L15 20l-3 1.4-3.3-7.6L4 18z" fill="#fff" stroke="#111" stroke-width="1.1"/></svg>
+  </div>
+
+  <!-- ============ S5: visibility ============ -->
+  <div class="scene" id="s5">
+    <div id="ide5" class="ide center" style="grid-template-columns:76px 300px 1fr">
+      <div class="rail"><div class="lg">K</div><b></b><b class="on"></b><b></b><b></b><b></b><b></b><b></b></div>
+      <div class="top" style="grid-column:2 / 4"><div class="sel"><span class="dot ok"></span>prod-eu</div><div class="sel">default</div><div style="flex:1"></div><div id="liveBadge" class="chip" style="background:rgba(242,84,91,.16);color:#ff8a8f;font-size:17px"><span class="dot" style="background:var(--err);box-shadow:0 0 10px var(--err)"></span>LIVE</div></div>
+      <div id="side5" style="background:#0d1424;border-right:1px solid #1f2b43;padding:20px 14px;font:600 19px Inter;color:var(--fg2)"></div>
+      <div class="main"><div id="resTitle" style="font:800 34px Inter">Pods</div><table class="tbl" style="margin-top:18px"><thead><tr id="resHead"></tr></thead><tbody id="resBody"></tbody></table></div>
+    </div>
+    <div id="lens" class="center" style="width:900px;height:900px;border-radius:50%;border:2px solid rgba(140,170,255,.5);box-shadow:0 0 80px rgba(110,140,255,.35)"></div>
+    <div id="topo" class="center glass" style="width:1500px;height:780px">
+      <div style="position:absolute;left:34px;top:26px;font:800 32px Inter">Topology</div>
+      <svg id="topoSvg" width="1500" height="780" viewBox="0 0 1500 780"></svg>
+    </div>
+    <div id="obs" class="abs" style="inset:0">
+      <div id="mChart" class="win" style="left:120px;top:190px;width:820px;height:560px">
+        <div class="tb"><i></i><i></i><i></i><span>CPU · prod-eu</span></div><svg id="cpuSvg" width="820" height="522" viewBox="0 0 820 522"></svg>
+      </div>
+      <div id="mLogs" class="win" style="left:980px;top:190px;width:820px;height:560px">
+        <div class="tb"><i></i><i></i><i></i><span>logs · web-7d9f</span></div><div class="body" id="okLogs" style="height:522px;overflow:hidden"></div>
+      </div>
+      <div id="noCmd" class="glass abs mono" style="left:660px;top:800px;width:600px;padding:20px 26px;font-size:28px;color:var(--fg2)"><span style="color:var(--ok)">$</span> kubectl top pods -n prod<div id="strike" class="abs" style="left:20px;top:50%;height:5px;width:0;background:var(--err);border-radius:3px"></div></div>
+    </div>
+    <div id="clock1" class="center" style="text-align:center"></div>
+  </div>
+
+  <!-- ============ S6: AI ============ -->
+  <div class="scene" id="s6">
+    <div id="spark6" class="center" style="width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 0 40px 18px rgba(170,140,255,.9),0 0 140px 60px rgba(124,92,255,.5)"></div>
+    <div id="ide6" class="ide center" style="width:1600px">
+      <div class="rail"><div class="lg">K</div><b></b><b class="on"></b><b></b><b></b><b></b></div>
+      <div class="top"><div class="sel"><span class="dot ok"></span>prod-eu</div><div class="sel">checkout</div><div style="flex:1"></div></div>
+      <div class="main" style="display:grid;grid-template-columns:1fr 720px;gap:26px;padding:24px">
+        <div>
+          <div style="font:800 30px Inter">Pods</div>
+          <table class="tbl" style="margin-top:14px"><thead><tr><th>Name</th><th>Status</th><th>Restarts</th></tr></thead><tbody>
+            <tr><td>checkout-api-6c9f</td><td id="podStatus"><span class="chip mono" style="background:rgba(242,84,91,.16);color:#ff8a8f;font-size:15px;padding:6px 10px">CrashLoopBackOff</span></td><td id="podRestarts">14</td></tr>
+            <tr><td>cart-5b7d</td><td><span class="chip mono" style="background:rgba(46,194,126,.14);color:var(--ok);font-size:15px;padding:6px 10px">Running</span></td><td>0</td></tr>
+            <tr><td>web-7d9f</td><td><span class="chip mono" style="background:rgba(46,194,126,.14);color:var(--ok);font-size:15px;padding:6px 10px">Running</span></td><td>0</td></tr>
+            <tr><td>auth-84c2</td><td><span class="chip mono" style="background:rgba(46,194,126,.14);color:var(--ok);font-size:15px;padding:6px 10px">Running</span></td><td>0</td></tr>
+          </tbody></table>
+        </div>
+        <div id="aiPanel" style="border-radius:16px;background:#0f1729;border:1px solid #2b3c5d;overflow:hidden;position:relative;box-shadow:0 0 0 1px rgba(124,92,255,.25),0 0 80px rgba(124,92,255,.18)">
+          <div style="height:64px;display:flex;align-items:center;gap:14px;padding:0 22px;border-bottom:1px solid #22304a;font:700 22px Inter"><div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#4f8cff,#7c5cff);display:grid;place-items:center">✦</div>AI Assistant</div>
+          <div style="padding:22px;display:flex;flex-direction:column;gap:16px">
+            <div id="qBubble" style="align-self:flex-end;max-width:560px;padding:16px 20px;border-radius:16px;background:linear-gradient(135deg,#4f8cff,#7c5cff);font:600 22px Inter;min-height:58px"><span id="qText"></span></div>
+            <div id="tools6" style="display:flex;gap:10px;flex-wrap:wrap">
+              <span class="chip mono t6" style="background:#0b1222;border:1px solid #2a3a58;color:#9fb4d9;font-size:16px;border-radius:10px">get_logs <b style="color:var(--ok)">✓</b></span>
+              <span class="chip mono t6" style="background:#0b1222;border:1px solid #2a3a58;color:#9fb4d9;font-size:16px;border-radius:10px">get_events <b style="color:var(--ok)">✓</b></span>
+              <span class="chip mono t6" style="background:#0b1222;border:1px solid #2a3a58;color:#9fb4d9;font-size:16px;border-radius:10px">top_pods <b style="color:var(--ok)">✓</b></span>
+            </div>
+            <div id="cause" style="padding:18px 20px;border-radius:14px;background:rgba(245,165,36,.1);border:1px solid rgba(245,165,36,.45)">
+              <div style="font:700 15px Inter;letter-spacing:.2em;color:var(--warn)">ROOT CAUSE</div>
+              <div style="font:700 25px Inter;margin-top:6px">OOMKilled</div>
+              <div style="font:18px Inter;color:var(--fg2);margin-top:4px">Uses <b style="color:#fff">498Mi</b> of a <b style="color:#fff">256Mi</b> memory limit</div>
+            </div>
+            <div id="fix" style="padding:18px 20px;border-radius:14px;background:#0b1222;border:1px solid #2a3a58">
+              <div style="font:700 15px Inter;letter-spacing:.2em;color:var(--blue)">SUGGESTED FIX</div>
+              <div class="mono" style="font-size:19px;margin-top:10px;line-height:1.7"><div style="color:#ff8a8f;background:rgba(242,84,91,.1);padding:0 8px">- memory: 256Mi</div><div style="color:#7be0a9;background:rgba(46,194,126,.1);padding:0 8px">+ memory: 512Mi</div></div>
+              <div id="approve" style="display:inline-block;margin-top:14px;padding:12px 22px;border-radius:10px;background:linear-gradient(135deg,#4f8cff,#7c5cff);font:700 20px Inter">Approve & apply</div>
+              <span id="applied" style="margin-left:14px;font:700 20px Inter;color:var(--ok)">✓ Applied</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <svg id="cur6" class="abs" width="54" height="54" viewBox="0 0 24 24" style="z-index:20;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))"><path d="M4 2l14 9-6.5 1.3L15 20l-3 1.4-3.3-7.6L4 18z" fill="#fff" stroke="#111" stroke-width="1.1"/></svg>
+    <div id="payoff" class="center" style="text-align:center;width:1600px">
+      <div style="display:flex;align-items:center;justify-content:center;gap:70px">
+        <div id="pay60" class="bigword" style="color:#8a95ad;position:relative">60<span style="font-size:70px;margin-left:12px">min</span><div id="payStrike" class="abs" style="left:-10px;top:52%;height:14px;width:0;background:var(--err);border-radius:8px;box-shadow:0 0 30px var(--err)"></div></div>
+        <svg id="payArrow" width="160" height="80" viewBox="0 0 160 80"><path d="M10 40 H130 M100 12 L140 40 L100 68" stroke="#8fb3ff" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div id="pay3" class="bigword" style="color:var(--ok);text-shadow:0 0 60px rgba(46,194,126,.6)">3<span style="font-size:70px;margin-left:12px">min</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ S7: features ============ -->
+  <div class="scene" id="s7">
+    <div id="ring" class="center" style="width:10px;height:10px;transform-style:preserve-3d"><div id="ringHub" style="position:absolute;left:-80px;top:-60px;width:160px;height:160px;border-radius:50%;z-index:500;display:grid;place-items:center;background:radial-gradient(circle,rgba(124,92,255,.5),rgba(79,140,255,.12) 55%,transparent 70%)"><div class="logo" style="width:96px;height:96px;border-radius:26px;font-size:58px">K</div></div></div>
+    <div id="ide7" class="ide center" style="width:1300px;height:740px">
+      <div class="rail" id="rail7"><div class="lg">K</div></div>
+      <div class="top"><div class="sel"><span class="dot ok"></span>All clusters</div><div style="flex:1"></div><div class="sel" style="background:linear-gradient(135deg,#4f8cff,#7c5cff);color:#fff;border:0">✦ AI Assistant</div></div>
+      <div class="main" id="ide7main"></div>
+    </div>
+  </div>
+
+  <!-- ============ S8: free + platforms ============ -->
+  <div class="scene" id="s8">
+    <div class="abs" style="left:0;right:0;top:120px;text-align:center"><div class="label" id="entLabel">Enterprise features</div></div>
+    <div id="badges" class="abs" style="left:0;right:0;top:200px;display:flex;justify-content:center;gap:22px"></div>
+    <div id="tagWrap" class="abs" style="left:760px;top:430px;width:400px;height:300px;transform-origin:50% 0">
+      <svg width="400" height="300" viewBox="0 0 400 300"><path d="M200 0 V70" stroke="#8fa3c8" stroke-width="4"/></svg>
+      <div id="tag" class="abs" style="left:60px;top:60px;width:280px;height:170px;border-radius:24px;background:linear-gradient(135deg,#1c2740,#121a2c);border:2px solid #34466b;display:grid;place-items:center;box-shadow:0 30px 80px rgba(0,0,0,.6)">
+        <div style="position:absolute;top:18px;left:50%;width:22px;height:22px;margin-left:-11px;border-radius:50%;background:#05070d;border:3px solid #34466b"></div>
+        <div id="price" style="font:900 74px Inter;color:#8a95ad;margin-top:24px">$ $ $</div>
+        <div id="free" class="abs" style="inset:0;display:grid;place-items:center;font:900 82px Inter;letter-spacing:-.02em;color:#fff;border-radius:22px;background:linear-gradient(135deg,#2ec27e,#20a868);box-shadow:0 0 90px rgba(46,194,126,.6)">FREE</div>
+      </div>
+    </div>
+    <div id="devices" class="abs" style="left:0;right:0;top:300px;display:flex;justify-content:center;gap:60px"></div>
+  </div>
+
+  <!-- ============ S9: end ============ -->
+  <div class="scene" id="s9">
+    <div class="center" style="text-align:center;top:46%">
+      <div class="logo" id="logo9" style="margin:0 auto">K<svg class="spark" viewBox="-10 -10 20 20"><path d="M0 -10 L2.2 -2.2 L10 0 L2.2 2.2 L0 10 L-2.2 2.2 L-10 0 L-2.2 -2.2Z" fill="#fff"/></svg></div>
+      <div id="word9" style="font:900 140px/1 Inter;letter-spacing:-.035em;margin-top:44px">Kube<span class="grad">Nova</span></div>
+      <div id="tagline" style="font:600 46px Inter;color:var(--fg2);margin-top:26px;letter-spacing:-.01em">Kubernetes, made simple.</div>
+      <div id="cta" style="margin-top:54px;display:inline-flex;align-items:center;gap:26px">
+        <div id="dlBtn" style="white-space:nowrap;padding:24px 44px;border-radius:18px;background:linear-gradient(135deg,#4f8cff,#7c5cff);font:800 34px Inter;box-shadow:0 20px 60px rgba(110,110,255,.5)">Download free</div>
+        <div id="url" class="mono" style="font-size:30px;color:#b9d0ff;padding:22px 30px;border-radius:16px;border:1px solid #2e3f60;background:rgba(14,20,34,.8)">github.com/Mahmoudkamal448/KubeNova</div>
+      </div>
+      <div id="osRow" style="margin-top:34px;font:600 26px Inter;color:var(--fg3);letter-spacing:.12em">WINDOWS · MACOS · LINUX</div>
+    </div>
+  </div>
+</div>
+<canvas id="fx" width="1920" height="1080"></canvas>
+<div id="redwash"></div>
+<div id="vig"></div>
+<canvas id="grain" width="480" height="270" style="width:1920px;height:1080px"></canvas>
+<div id="flash"></div>
+<div id="fade"></div>
+
+<script src="gsap.min.js"></script>
+<script>
+// ---------- deterministic helpers ----------
+let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const R = (a, b) => a + (b - a) * rnd();
+const $ = (s) => document.querySelector(s), $$ = (s) => [...document.querySelectorAll(s)];
+const el = (tag, cls, html, css) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; if (css) e.style.cssText = css; return e; };
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const ease = (x) => 1 - Math.pow(1 - clamp(x, 0, 1), 3);
+const updaters = [];   // (t) => void, run every frame after the timeline
+
+// global params tweened by the timeline and read by the canvases
+const P = { neb: 0, red: 0, grid: 0.6, warp: 0, starSpeed: 1, hue: 0, implode: 0 };
+
+// ---------- K8s wheel ----------
+(function () {
+  const s = $("#wheel"); let h = "";
+  const hept = [...Array(7)].map((_, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / 7; return [Math.cos(a) * 92, Math.sin(a) * 92]; });
+  h += `<polygon points="${hept.map((p) => p.join(",")).join(" ")}" fill="#326ce5" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>`;
+  h += `<circle r="44" fill="none" stroke="#fff" stroke-width="9"/><circle r="12" fill="#fff"/>`;
+  for (let i = 0; i < 7; i++) { const a = -Math.PI / 2 + i * 2 * Math.PI / 7; h += `<line x1="${Math.cos(a) * 12}" y1="${Math.sin(a) * 12}" x2="${Math.cos(a) * 62}" y2="${Math.sin(a) * 62}" stroke="#fff" stroke-width="8" stroke-linecap="round"/><circle cx="${Math.cos(a) * 64}" cy="${Math.sin(a) * 64}" r="7" fill="#fff"/>`; }
+  s.innerHTML = `<g id="wheelG">${h}</g>`;
+})();
+
+// ---------- S1 content ----------
+const cmdList = ["kubectl get pods -A", "kubectl logs -f", "kubectl describe pod", "kubectl config use-context", "kubectl port-forward", "kubectl rollout restart", "kubectl get events", "kubectl top nodes", "helm upgrade --install", "kubectl edit deploy", "kubectl get svc", "aws eks update-kubeconfig"];
+cmdList.forEach((c, i) => {
+  const a = i / cmdList.length * Math.PI * 2 + 0.3, rx = 560 + (i % 3) * 70, ry = 300 + (i % 2) * 60;
+  const e = el("div", "chip mono cmd", `<span style="color:var(--ok)">$</span> ${c}`, `position:absolute;left:${960 + Math.cos(a) * rx - 150}px;top:${540 + Math.sin(a) * ry - 20}px;background:rgba(18,27,46,.9);border:1px solid #2b3c5d;color:#c9d6f0;font-size:20px`);
+  e.dataset.a = a; $("#cmds").appendChild(e);
+});
+for (let i = 0; i < 64; i++) {
+  const col = i % 11, row = Math.floor(i / 11);
+  const x = 110 + col * 165 + (row % 2) * 82 + R(-12, 12), y = 120 + row * 150 + R(-12, 12);
+  const e = el("div", "sw", `<svg width="64" height="64" viewBox="-50 -50 100 100"><polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill="#16213a" stroke="${["#4f8cff", "#7c5cff", "#38bdf8", "#326ce5"][i % 4]}" stroke-width="4"/><circle r="9" fill="${["#4f8cff", "#7c5cff", "#38bdf8", "#326ce5"][i % 4]}"/></svg>`, `position:absolute;left:${x}px;top:${y}px`);
+  $("#swarm").appendChild(e);
+}
+const fileNames = ["~/.kube/config", "prod-eu.yaml", "staging.kubeconfig", "eks-us-east-1.yaml", "aks-west.yaml", "gke-prod.yaml", "rancher-edge.yaml", "dev.yaml", "kind-local.yaml", "team-b/config"];
+fileNames.forEach((f, i) => {
+  const e = el("div", "yf glass", `<div style="font:700 15px Inter;color:#7f93ba;letter-spacing:.1em">YAML</div><div class="mono" style="font-size:19px;margin-top:8px;color:#dfe8fb">${f}</div><div style="margin-top:12px;height:8px;border-radius:4px;background:#26344f;width:80%"></div><div style="margin-top:8px;height:8px;border-radius:4px;background:#26344f;width:60%"></div>`,
+    `position:absolute;width:250px;padding:18px 20px;left:${R(80, 1590)}px;top:${R(70, 900)}px;border-radius:14px`);
+  e.dataset.r = R(-24, 24); $("#files").appendChild(e);
+});
+const toolDefs = [
+  ["Terminal", "#0b0f17", (n) => [...Array(n)].map(() => `<div><span style="color:#2ec27e">$</span> kubectl get pods -n ${["prod", "staging", "dev"][Math.floor(rnd() * 3)]}</div>`).join("")],
+  ["Grafana", "#111217", () => `<svg width="100%" height="220" viewBox="0 0 500 220"><polyline points="${[...Array(26)].map((_, i) => `${i * 20},${170 - rnd() * 120}`).join(" ")}" fill="none" stroke="#f5a524" stroke-width="4"/><polyline points="${[...Array(26)].map((_, i) => `${i * 20},${190 - rnd() * 80}`).join(" ")}" fill="none" stroke="#38bdf8" stroke-width="3"/></svg>`],
+  ["k9s", "#06121a", (n) => [...Array(n)].map((_, i) => `<div style="color:${i ? "#7dd3fc" : "#fde68a"}">${i ? "pod-" + Math.floor(rnd() * 9000) + "  Running  1/1" : "NAME            STATUS   READY"}</div>`).join("")],
+  ["AWS Console", "#0f1b2b", (n) => [...Array(n)].map(() => `<div style="height:16px;margin:10px 0;border-radius:4px;background:#1f3149;width:${50 + rnd() * 45}%"></div>`).join("")],
+  ["Azure Portal", "#0e1726", (n) => [...Array(n)].map(() => `<div style="height:16px;margin:10px 0;border-radius:4px;background:#1b3354;width:${40 + rnd() * 55}%"></div>`).join("")],
+  ["Rancher", "#0d1a22", (n) => [...Array(n)].map(() => `<div style="height:16px;margin:10px 0;border-radius:4px;background:#173a44;width:${45 + rnd() * 50}%"></div>`).join("")],
+];
+toolDefs.forEach(([name, bg, body], i) => {
+  const w = el("div", "win tool", `<div class="tb"><i></i><i></i><i></i><span>${name}</span></div><div class="body" style="background:${bg};height:300px;overflow:hidden">${body(9)}</div>`,
+    `left:${[180, 1010, 560, 1240, 300, 760][i]}px;top:${[140, 120, 420, 520, 600, 260][i]}px;width:${[620, 560, 600, 560, 580, 600][i]}px;height:340px`);
+  w.dataset.r = [-4, 3, -2, 5, 2, -3][i]; $("#tools").appendChild(w);
+});
+
+// ---------- S2 content ----------
+const errLines = ["Starting checkout-api v2.14.1", "Connecting to postgres://orders", "Loaded 48,211 cart sessions", "WARN heap usage 91%", "WARN heap usage 97%", "ERROR java.lang.OutOfMemoryError", "  at CartCache.load(CartCache.java:118)", "  at Checkout.handle(Checkout.java:52)", "FATAL process exited, code 137", "Starting checkout-api v2.14.1", "Connecting to postgres://orders", "WARN heap usage 95%", "ERROR java.lang.OutOfMemoryError", "FATAL process exited, code 137"];
+$("#logLines").innerHTML = [...errLines, ...errLines].map((l) => `<div style="white-space:nowrap;color:${/ERROR|FATAL/.test(l) ? "#ff8a8f" : /WARN/.test(l) ? "#f5c26b" : "#9fb0cf"}">${l}</div>`).join("");
+$("#evLines").innerHTML = [["Warning", "BackOff", "Back-off restarting failed container"], ["Warning", "OOMKilling", "Memory cgroup out of memory"], ["Normal", "Pulled", "Container image already present"], ["Warning", "Unhealthy", "Readiness probe failed: 503"], ["Normal", "Created", "Created container checkout"], ["Warning", "BackOff", "Back-off restarting failed container"]]
+  .map(([k, r, m]) => `<div style="padding:12px 4px;border-bottom:1px solid #1b2740"><span style="color:${k === "Warning" ? "#f5c26b" : "#7be0a9"};font-weight:700">${k}</span>  <b style="color:#dfe8fb">${r}</b><div style="color:#8293b5;font-size:14px">${m}</div></div>`).join("");
+(function () {
+  const pts = [...Array(30)].map((_, i) => [20 + i * 18, 400 - (i < 18 ? 40 + i * 6 + Math.sin(i) * 8 : 150 + (i - 18) * 22)]);
+  $("#memChart").innerHTML = `<line x1="20" y1="150" x2="540" y2="150" stroke="#f2545b" stroke-dasharray="8 8" stroke-width="2"/><text x="24" y="140" fill="#ff8a8f" font-family="Inter" font-size="15" font-weight="700">limit 256Mi</text>` +
+    `<path id="memPath" d="M${pts.map((p) => p.join(",")).join(" L")}" fill="none" stroke="#f5a524" stroke-width="5" stroke-linejoin="round"/>`;
+})();
+
+// ---------- S3 content ----------
+$("#word3").innerHTML = "KubeNova".split("").map((c, i) => `<span class="w3c ${i > 3 ? "grad" : ""}" style="display:inline-block">${c}</span>`).join("");
+const clusterNames = ["prod-eu", "prod-us", "staging", "payments", "checkout", "data-lake", "ml-gpu", "edge-cairo", "edge-dubai", "qa", "sandbox", "analytics"];
+const clusterSub = ["eks · eu-west-1", "eks · us-east-1", "rke2 · rancher", "aks · westeurope", "gke · europe-west4", "eks · eu-central-1", "gke · us-central1", "k3s · on-prem", "k3s · on-prem", "kind", "minikube", "aks · uaenorth"];
+clusterNames.forEach((n, i) => $("#ideGrid").appendChild(el("div", "ccard ic3", `<div class="n"><span class="dot ${i % 5 === 0 ? "ok" : ""}"></span>${n}</div><div class="s">${clusterSub[i]}</div><div style="margin-top:12px;display:flex;gap:8px"><span class="tag">${clusterSub[i].split(" · ")[0]}</span></div>`)));
+for (let i = 0; i < 4; i++) {
+  const [x, y] = [[220, 110], [1700, 110], [220, 970], [1700, 970]][i];
+  $("#brackets").appendChild(el("div", "br", "", `position:absolute;left:${x - 30}px;top:${y - 30}px;width:60px;height:60px;border-color:rgba(160,190,255,.8);border-style:solid;border-width:${i < 2 ? "4px" : "0"} ${i % 2 ? "4px" : "0"} ${i >= 2 ? "4px" : "0"} ${i % 2 ? "0" : "4px"}`));
+}
+for (let i = 0; i < 4; i++) $("#rings").appendChild(el("div", "ring3", "", `position:absolute;left:960px;top:540px;width:300px;height:300px;margin:-150px;border-radius:50%;border:${3 - i * .5}px solid ${["#9db8ff", "#c084fc", "#7c5cff", "#4f8cff"][i]}`));
+
+// ---------- S4 content ----------
+const sources = [
+  { k: "onprem", name: "On-premise", sub: "bare metal · VMware", col: "#9aa7c0", x: 300, y: 300, icon: `<svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#c9d3e6" stroke-width="1.8"><rect x="4" y="3" width="16" height="6" rx="1.5"/><rect x="4" y="10" width="16" height="6" rx="1.5"/><rect x="4" y="17" width="16" height="4" rx="1.5"/><circle cx="7.5" cy="6" r=".8" fill="#2ec27e"/><circle cx="7.5" cy="13" r=".8" fill="#2ec27e"/></svg>` },
+  { k: "aws", name: "AWS", sub: "EKS", col: "#ff9900", x: 560, y: 160 },
+  { k: "azure", name: "Azure", sub: "AKS", col: "#2f8cff", x: 960, y: 110 },
+  { k: "gcp", name: "Google Cloud", sub: "GKE", col: "#34a853", x: 1360, y: 160 },
+  { k: "rancher", name: "Rancher", sub: "RKE2 · K3s", col: "#2fb8ac", x: 1620, y: 300 },
+];
+const hubXY = [960, 640];
+sources.forEach((s) => {
+  const n = el("div", "src glass", `<div style="width:64px;height:64px;border-radius:16px;display:grid;place-items:center;background:${s.col}22;border:1px solid ${s.col}88">${s.icon || `<span style="font:900 ${s.name.length > 6 ? 18 : 24}px Inter;color:${s.col}">${s.name === "Google Cloud" ? "G" : s.name === "Rancher" ? "R" : s.name}</span>`}</div><div><div style="font:800 26px Inter">${s.name}</div><div style="font:600 16px Inter;color:var(--fg3)">${s.sub}</div></div>`,
+    `position:absolute;left:${s.x - 150}px;top:${s.y - 50}px;width:300px;padding:16px 20px;display:flex;align-items:center;gap:16px;border-color:${s.col}66`);
+  n.id = "src-" + s.k; $("#srcNodes").appendChild(n);
+});
+$("#srcSvg").innerHTML = `<defs><linearGradient id="lg4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fb3ff"/><stop offset="1" stop-color="#7c5cff"/></linearGradient></defs>` +
+  sources.map((s) => { const [hx, hy] = hubXY, my = (s.y + 50 + hy) / 2; return `<path id="ln-${s.k}" d="M${s.x},${s.y + 50} C${s.x},${my} ${hx},${my} ${hx},${hy - 95}" stroke="${s.col}" stroke-width="3" fill="none" opacity=".85"/>`; }).join("") +
+  sources.map((s) => [0, 1, 2].map((j) => `<circle class="flow" data-src="${s.k}" data-j="${j}" r="6" fill="${s.col}" style="filter:drop-shadow(0 0 6px ${s.col})"/>`).join("")).join("");
+sources.forEach((s) => {
+  const col = el("div", "dcol", `<div style="display:flex;align-items:center;gap:10px;font:800 20px Inter;color:${s.col};margin-bottom:12px"><span style="width:10px;height:10px;border-radius:3px;background:${s.col}"></span>${s.name}</div>`);
+  for (let j = 0; j < 4; j++) col.appendChild(el("div", "ccard dcard", `<div class="n" style="font-size:18px"><span class="dot"></span>${s.k}-${["prod", "stage", "dev", "edge"][j]}</div><div class="s">${s.sub.split(" · ")[0].toLowerCase()} · ${["eu", "us", "me", "ap"][j]}</div>`, "height:96px;margin-bottom:14px"));
+  $("#dashCols").appendChild(col);
+});
+for (let i = 0; i < 6; i++) $("#flyFiles").appendChild(el("div", "ff glass mono", `${["prod.yaml", "edge.yaml", "gpu.yaml", "qa.yaml", "aks.yaml", "eks.yaml"][i]}`, "position:absolute;left:250px;top:700px;padding:10px 16px;font-size:18px;color:#cfe0ff;border-radius:10px"));
+(function () {
+  const h = $("#hundred");
+  for (let i = 0; i < 100; i++) {
+    const c = i % 10, r = Math.floor(i / 10);
+    h.appendChild(el("div", "hd", "", `position:absolute;left:${c * 100 + 30}px;top:${r * 62 + 10}px;width:40px;height:40px;border-radius:12px;background:#151f34;border:2px solid #2a3a58`));
+  }
+})();
+
+// ---------- S5 content ----------
+$("#side5").innerHTML = ["WORKLOADS", "Pods", "Deployments", "StatefulSets", "NETWORK", "Services", "Ingresses", "CUSTOM RESOURCES", "CRDs", "Certificates"].map((x) =>
+  /^[A-Z ]+$/.test(x) ? `<div style="font:700 13px Inter;letter-spacing:.14em;color:var(--fg3);margin:18px 8px 8px">${x}</div>` : `<div class="si" data-k="${x}" style="padding:10px 14px;border-radius:10px">${x}</div>`).join("");
+const resData = {
+  Pods: [["NAME", "STATUS", "READY", "RESTARTS", "AGE"], [["web-7d9f", "Running", "1/1", "0", "2d"], ["api-5c7b", "Running", "1/1", "0", "2d"], ["worker-8f2a", "Pending", "0/1", "0", "4s"], ["cart-5b7d", "Running", "1/1", "0", "6h"], ["auth-84c2", "Running", "1/1", "0", "9h"], ["queue-1f6e", "Pending", "0/1", "0", "2s"]]],
+  Deployments: [["NAME", "READY", "UP-TO-DATE", "AVAILABLE", "AGE"], [["web", "3/3", "3", "3", "41d"], ["api", "4/4", "4", "4", "41d"], ["worker", "2/3", "3", "2", "12d"], ["cart", "2/2", "2", "2", "7d"], ["auth", "2/2", "2", "2", "90d"], ["queue", "1/2", "2", "1", "3d"]]],
+  Services: [["NAME", "TYPE", "CLUSTER-IP", "PORTS", "AGE"], [["web", "LoadBalancer", "10.0.12.4", "80/TCP", "41d"], ["api", "ClusterIP", "10.0.18.9", "8080/TCP", "41d"], ["cart", "ClusterIP", "10.0.7.31", "8080/TCP", "7d"], ["auth", "ClusterIP", "10.0.4.12", "9000/TCP", "90d"], ["redis", "ClusterIP", "10.0.2.2", "6379/TCP", "120d"], ["kafka", "Headless", "None", "9092/TCP", "64d"]]],
+  CRDs: [["NAME", "GROUP", "VERSION", "SCOPE", "AGE"], [["certificates", "cert-manager.io", "v1", "Namespaced", "300d"], ["applications", "argoproj.io", "v1alpha1", "Namespaced", "210d"], ["kustomizations", "kustomize.toolkit.fluxcd.io", "v1", "Namespaced", "180d"], ["servicemonitors", "monitoring.coreos.com", "v1", "Namespaced", "300d"], ["policies", "kyverno.io", "v1", "Cluster", "90d"], ["gateways", "gateway.networking.k8s.io", "v1", "Namespaced", "40d"]]],
+};
+function showRes(k) {
+  const [h, rows] = resData[k];
+  $("#resTitle").textContent = k === "CRDs" ? "Custom Resource Definitions" : k;
+  $("#resHead").innerHTML = h.map((x) => `<th>${x}</th>`).join("");
+  $("#resBody").innerHTML = rows.map((r) => `<tr class="rr">${r.map((c, j) => `<td>${j === 1 && k === "Pods" ? `<span class="st chip mono" data-v="${c}" style="font-size:15px;padding:6px 10px;${c === "Running" ? "background:rgba(46,194,126,.14);color:#2ec27e" : "background:rgba(245,165,36,.14);color:#f5a524"}">${c}</span>` : c}</td>`).join("")}</tr>`).join("");
+  $$("#side5 .si").forEach((s) => { const on = s.dataset.k === k; s.style.background = on ? "rgba(79,140,255,.22)" : "transparent"; s.style.color = on ? "#fff" : ""; s.style.boxShadow = on ? "inset 0 0 0 1px rgba(79,140,255,.5)" : "none"; });
+}
+showRes("Pods");
+(function () {
+  const N = { ing: [180, 390, "Ingress", "web.example.com", "#38bdf8"], svc: [480, 390, "Service", "web", "#4f8cff"], dep: [780, 390, "Deployment", "web", "#7c5cff"], rs: [1060, 390, "ReplicaSet", "web-7d9f", "#a78bfa"],
+    p1: [1330, 220, "Pod", "web-7d9f-a1", "#2ec27e"], p2: [1330, 390, "Pod", "web-7d9f-b2", "#2ec27e"], p3: [1330, 560, "Pod", "web-7d9f-c3", "#2ec27e"], cm: [780, 630, "ConfigMap", "web-config", "#f5a524"], sec: [480, 630, "Secret", "web-tls", "#f2545b"] };
+  const E = [["ing", "svc"], ["svc", "dep"], ["dep", "rs"], ["rs", "p1"], ["rs", "p2"], ["rs", "p3"], ["cm", "dep"], ["sec", "ing"]];
+  let s = "";
+  E.forEach(([a, b], i) => { const [x1, y1] = N[a], [x2, y2] = N[b]; s += `<path class="te" id="te${i}" d="M${x1},${y1} C${(x1 + x2) / 2},${y1} ${(x1 + x2) / 2},${y2} ${x2},${y2}" stroke="#4a5f8a" stroke-width="3" fill="none"/><circle class="tp" data-e="${i}" r="5" fill="#9fc0ff"/>`; });
+  Object.entries(N).forEach(([k, [x, y, kind, name, c]]) => { s += `<g class="tn" id="tn-${k}" transform="translate(${x} ${y})"><rect x="-110" y="-44" width="220" height="88" rx="16" fill="#121b2e" stroke="${c}" stroke-width="2.5"/><text x="0" y="-8" text-anchor="middle" font-family="Inter" font-size="15" font-weight="700" fill="${c}" letter-spacing="2">${kind.toUpperCase()}</text><text x="0" y="20" text-anchor="middle" font-family="DejaVu Sans Mono" font-size="17" fill="#e8edf7">${name}</text></g>`; });
+  $("#topoSvg").innerHTML = s;
+})();
+$("#okLogs").innerHTML = [...Array(40)].map((_, i) => `<div style="white-space:nowrap"><span style="color:#6b7895">10:42:${String(10 + i).padStart(2, "0")}</span> <span style="color:${i % 7 === 3 ? "#f5c26b" : "#7be0a9"}">${i % 7 === 3 ? "WARN" : "INFO"}</span> ${["GET /api/cart 200 12ms", "GET /health 200 1ms", "POST /api/order 201 48ms", "cache hit ratio 0.97", "GET /api/items 200 9ms", "worker heartbeat ok"][i % 6]}</div>`).join("");
+$("#clock1").innerHTML = `<svg width="420" height="420" viewBox="-110 -110 220 220"><circle r="100" fill="#0e1524" stroke="#3a4d74" stroke-width="6"/>${[...Array(12)].map((_, i) => { const a = i * Math.PI / 6; return `<line x1="${Math.sin(a) * 82}" y1="${-Math.cos(a) * 82}" x2="${Math.sin(a) * 92}" y2="${-Math.cos(a) * 92}" stroke="#6b7895" stroke-width="${i % 3 ? 2 : 4}"/>`; }).join("")}<path id="clockArc" fill="rgba(242,84,91,.25)"/><line id="hMin" x1="0" y1="0" x2="0" y2="-76" stroke="#fff" stroke-width="5" stroke-linecap="round"/><line id="hHr" x1="0" y1="0" x2="0" y2="-48" stroke="#c9d3e6" stroke-width="7" stroke-linecap="round"/><circle r="7" fill="#fff"/></svg><div id="clockLbl" style="font:900 72px Inter;margin-top:10px"><span id="clockTxt">1 hour</span></div>`;
+
+// ---------- S7 content ----------
+const feats = [["Helm", "#0f9bd7", "M12 3l8 4.5v9L12 21l-8-4.5v-9z M12 8v8 M8 10l8 4 M16 10l-8 4"], ["GitOps", "#ef7b4d", "M6 3v12 M18 9v12 M6 15a6 6 0 0 0 6 6h6 M18 9a6 6 0 0 0-6-6H6"], ["Argo CD", "#ff7a59", "M12 3a7 7 0 0 1 7 7v4a7 7 0 0 1-14 0v-4a7 7 0 0 1 7-7z M9 11h.01 M15 11h.01 M9 16c2 1.5 4 1.5 6 0"], ["Flux", "#5468ff", "M4 7h16 M4 12h10 M4 17h6 M18 12l3 3-3 3"], ["Security scanning", "#2ec27e", "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z M9 12l2 2 4-4"], ["RBAC", "#f5a524", "M9 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z M2 21a7 7 0 0 1 14 0 M19 8v6 M16 11h6"], ["Multi-cluster search", "#38bdf8", "M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14z M16 16l5 5"]];
+feats.forEach(([t, c, p], i) => {
+  const w = el("div", "ftw", "", "position:absolute;left:-165px;top:-95px;width:330px;height:190px");
+  const e = el("div", "tile glass ft", `<div class="ic" style="background:${c}22;border:1px solid ${c}77"><svg width="36" height="36" viewBox="0 0 24 24"><path d="${p}" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="t">${t}</div>`, `left:0;top:0;border-color:${c}55;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 50px ${c}22`);
+  w.appendChild(e); $("#ring").appendChild(w);
+  $("#rail7").appendChild(el("div", "r7", `<svg width="24" height="24" viewBox="0 0 24 24"><path d="${p}" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`, "width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:#182238"));
+});
+$("#ide7main").innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px">${feats.slice(0, 6).map(([t, c]) => `<div class="ccard m7" style="height:150px;border-color:${c}55"><div style="font:700 15px Inter;letter-spacing:.14em;color:${c}">${t.toUpperCase()}</div><div style="margin-top:16px;height:10px;border-radius:5px;background:#1d2a44;width:80%"></div><div style="margin-top:10px;height:10px;border-radius:5px;background:#1d2a44;width:55%"></div><div style="margin-top:10px;height:10px;border-radius:5px;background:${c}66;width:35%"></div></div>`).join("")}</div>`;
+
+// ---------- S8 content ----------
+["Single sign-on", "Audit logs", "Team RBAC", "SCIM", "Air-gapped", "FIPS"].forEach((b) => $("#badges").appendChild(el("div", "chip bdg glass", `<span style="color:var(--violet)">◆</span>${b}`, "font-size:24px;padding:16px 24px;border-radius:14px")));
+[["Windows", `<svg width="60" height="60" viewBox="0 0 24 24"><path d="M3 5l7-1v7H3zM11 4l10-1.5V11H11zM3 12h7v7l-7-1zM11 12h10v8.5L11 19z" fill="#4f9dff"/></svg>`],
+ ["macOS", `<svg width="60" height="60" viewBox="0 0 24 24"><path d="M16.5 12.6c0-2.5 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-1.9-1.5-.2-3 .9-3.7.9-.8 0-2-.9-3.2-.9-1.7 0-3.2 1-4.1 2.5-1.8 3-.5 7.5 1.2 10 .8 1.2 1.8 2.6 3.1 2.5 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.4 1-1.4 1.3-2.7 1.3-2.8 0 0-2.5-1-2.5-4.2zM14.2 5.3c.7-.8 1.1-1.9 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4z" fill="#e8edf7"/></svg>`],
+ ["Linux", `<svg width="60" height="60" viewBox="0 0 24 24"><ellipse cx="12" cy="9" rx="5" ry="7" fill="#e8edf7"/><ellipse cx="12" cy="11" rx="3.2" ry="5" fill="#0b1120"/><circle cx="10.3" cy="6.5" r=".9" fill="#0b1120"/><circle cx="13.7" cy="6.5" r=".9" fill="#0b1120"/><path d="M10.5 8.3h3l-1.5 1.4z" fill="#f5a524"/><ellipse cx="8" cy="19.5" rx="3" ry="1.6" fill="#f5a524"/><ellipse cx="16" cy="19.5" rx="3" ry="1.6" fill="#f5a524"/></svg>`]].forEach(([n, ic]) => {
+  $("#devices").appendChild(el("div", "dev", `<div style="width:460px;height:290px;border-radius:18px;border:3px solid #34466b;background:#0b1120;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,.6);display:grid;grid-template-columns:44px 1fr;grid-template-rows:34px 1fr">
+    <div style="grid-row:1/3;background:#0f1626;border-right:1px solid #1f2b43;display:flex;flex-direction:column;align-items:center;padding-top:8px;gap:6px"><div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#5b97ff,#7c5cff)"></div>${"<i style='width:24px;height:20px;border-radius:6px;background:#182238;display:block'></i>".repeat(5)}</div>
+    <div style="background:#0f1626;border-bottom:1px solid #1f2b43"></div>
+    <div style="padding:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${"<div style='height:52px;border-radius:8px;background:#121b2e;border:1px solid #263552'></div>".repeat(6)}</div></div>
+    <div style="width:520px;height:16px;margin:-2px -30px 0;border-radius:0 0 18px 18px;background:linear-gradient(#3a4a6b,#232f48)"></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-top:34px;font:800 38px Inter">${ic}${n}</div>`, "text-align:center"));
+});
+
+// ---------- timeline ----------
+gsap.set(".center:not(#ring)", { xPercent: -50, yPercent: -50 });
+const tl = gsap.timeline({ paused: true });
+const E3 = "power3.out", E2 = "power2.inOut";
+const show = (id, at) => tl.set(id, { opacity: 1, visibility: "visible" }, at);
+const hide = (id, at, d = .4) => { tl.to(id, { opacity: 0, duration: d, ease: "power2.in" }, at); tl.set(id, { visibility: "hidden" }, at + d); };
+const flash = (at, o = .85, d = .5) => tl.fromTo("#flash", { opacity: o }, { opacity: 0, duration: d, ease: "power2.out", immediateRender: false }, at);
+const shake = (at, amp = 14, n = 8) => { for (let i = 0; i < n; i++) tl.to("#cam", { x: (i % 2 ? -1 : 1) * amp * (1 - i / n), y: (i % 3 - 1) * amp * .6 * (1 - i / n), duration: .04 }, at + i * .04); tl.to("#cam", { x: 0, y: 0, duration: .08 }, at + n * .04); };
+
+tl.to("#fade", { opacity: 0, duration: .8, ease: "power2.out" }, 0);
+
+// S1 0 – 9.5
+show("#s1", 0);
+tl.fromTo("#wheel", { scale: .2, opacity: 0, rotation: -120 }, { scale: 1, opacity: 1, rotation: 0, duration: 1.2, ease: "back.out(1.4)" }, .15);
+tl.to("#wheelG", { rotation: 200, svgOrigin: "0 0", duration: 9, ease: "none" }, 0);
+$$(".cmd").forEach((c, i) => {
+  tl.fromTo(c, { opacity: 0, scale: .6, x: (960 - parseFloat(c.style.left) - 150) * .6, y: (540 - parseFloat(c.style.top)) * .6 }, { opacity: 1, scale: 1, x: 0, y: 0, duration: .55, ease: E3 }, .55 + i * .2);
+  tl.to(c, { y: "+=" + (i % 2 ? -30 : 30), x: "+=" + (i % 3 - 1) * 30, duration: 4, ease: "sine.inOut" }, 1.2 + i * .2);
+});
+tl.to("#cam", { scale: 1.06, duration: 3.4, ease: "sine.inOut" }, 0);
+// 3.61 dozens of clusters
+tl.to(".cmd", { opacity: .25, duration: .4 }, 3.55);
+tl.to("#wheel", { scale: .45, opacity: 0, duration: .45, ease: "power2.in" }, 3.55);
+flash(3.62, .35, .35);
+tl.fromTo(".sw", { scale: 0, opacity: 0, x: (i, e) => 960 - parseFloat(e.style.left) - 32, y: (i, e) => 540 - parseFloat(e.style.top) - 32 },
+  { scale: 1, opacity: 1, x: 0, y: 0, duration: .65, ease: "back.out(1.6)", stagger: { each: .012, from: "center", grid: [6, 11] } }, 3.62);
+tl.to("#cam", { scale: 1, duration: .6, ease: E3 }, 3.62);
+// 5.0 kubeconfig files everywhere
+tl.to(".sw", { opacity: .28, duration: .5 }, 4.95);
+$$(".yf").forEach((f, i) => tl.fromTo(f, { opacity: 0, scale: 1.6, rotation: +f.dataset.r * 2, y: -80 }, { opacity: 1, scale: 1, rotation: +f.dataset.r, y: 0, duration: .45, ease: "back.out(1.4)" }, 5.0 + i * .11));
+// 7.17 six tools
+tl.to([".yf", ".cmd"], { opacity: .3, duration: .4 }, 7.0);
+[7.17, 7.42, 7.62, 7.86, 8.2, 8.45].forEach((t, i) => {
+  const w = $$(".tool")[i];
+  tl.fromTo(w, { opacity: 0, scale: 1.35, rotation: +w.dataset.r * 3, y: 60 }, { opacity: 1, scale: 1, rotation: +w.dataset.r, y: 0, duration: .32, ease: "power4.out" }, t);
+  shake(t + .05, 6, 4);
+});
+// S2 incident 9.58
+tl.to("#s1", { filter: "grayscale(1) brightness(.45) blur(3px)", duration: .9, ease: E2 }, 9.5);
+tl.to(P, { red: .55, duration: 1.2 }, 9.6);
+show("#s2", 9.58);
+tl.set(["#pLogs", "#pEvents", "#pMetrics", "#timer"], { opacity: 0 }, 9.58);
+tl.fromTo("#alertCard", { opacity: 0, scale: .85, y: 40 }, { opacity: 1, scale: 1, y: 0, duration: .7, ease: E3 }, 10.0);
+tl.fromTo("#redwash", { opacity: 0 }, { opacity: .9, duration: .25, yoyo: true, repeat: 3, ease: "sine.inOut" }, 11.35);
+shake(11.45, 18, 10);
+tl.to("#cam", { scale: 1.04, duration: 2, ease: "sine.out" }, 10.6);
+// 13.2 chase logs / events / metrics
+hide("#s1", 13.0, .5);
+tl.to("#alertCard", { opacity: 0, scale: .9, y: -60, duration: .45, ease: "power2.in" }, 13.15);
+tl.to("#cam", { scale: 1, duration: .5 }, 13.2);
+[["#pLogs", 13.3, 14.4], ["#pEvents", 13.5, 14.85], ["#pMetrics", 13.7, 15.15]].forEach(([id, t, hit]) => {
+  tl.fromTo(id, { opacity: 0, x: 500, rotationY: -35 }, { opacity: .55, x: 0, rotationY: 0, duration: .5, ease: "power4.out" }, t);
+  tl.to(id, { opacity: 1, scale: 1.04, borderColor: "#f2545b", boxShadow: "0 0 0 2px rgba(242,84,91,.6), 0 0 60px rgba(242,84,91,.35)", duration: .2, ease: "power2.out" }, hit);
+  tl.to(id, { scale: 1, duration: .35, ease: "power2.out" }, hit + .2);
+});
+tl.fromTo("#memPath", { strokeDasharray: 900, strokeDashoffset: 900 }, { strokeDashoffset: 0, duration: 1.4, ease: "none" }, 15.2);
+// 15.64 every minute counts
+tl.to(["#pLogs", "#pEvents", "#pMetrics"], { y: 90, opacity: .45, filter: "blur(2px)", duration: .5, ease: E2 }, 15.6);
+tl.fromTo("#timer", { opacity: 0, scale: 1.5 }, { opacity: 1, scale: 1, duration: .45, ease: "power4.out" }, 15.64);
+tl.to("#redwash", { opacity: .5, duration: .4 }, 15.7);
+// 18.18 implode
+tl.to("#s2 > *", { scale: 0, x: (i, e) => 960 - (e.offsetLeft + e.offsetWidth / 2), y: (i, e) => 540 - (e.offsetTop + e.offsetHeight / 2), opacity: 0, filter: "blur(12px)", duration: 1.15, ease: "power3.in", stagger: .05 }, 18.2);
+tl.to("#redwash", { opacity: 0, duration: .8 }, 18.3);
+tl.to(P, { red: 0, implode: 1, duration: 1.3, ease: "power2.in" }, 18.2);
+tl.to("#cam", { scale: 1.12, duration: 1.4, ease: "power2.in" }, 18.2);
+hide("#s2", 19.5, .2);
+tl.set(P, { implode: 0 }, 19.6);
+tl.set("#cam", { scale: 1 }, 19.7);
+
+// S3 reveal 20.2
+show("#s3", 19.9);
+tl.set(["#ide3", "#sweep", "#brackets"], { opacity: 0 }, 19.9);
+flash(20.2, 1, .7);
+$$(".ring3").forEach((r, i) => tl.fromTo(r, { scale: .2, opacity: 1 }, { scale: 6 - i, opacity: 0, duration: 1.4 + i * .15, ease: "expo.out" }, 20.2 + i * .06));
+tl.fromTo("#logo3", { scale: 0, rotation: -200 }, { scale: 1, rotation: 0, duration: 1, ease: "back.out(1.5)" }, 20.2);
+tl.fromTo("#logo3 .spark", { scale: 0, rotation: -90, transformOrigin: "50% 50%" }, { scale: 1, rotation: 0, duration: .6, ease: "back.out(3)" }, 20.75);
+tl.from(".w3c", { y: 140, opacity: 0, rotationX: -90, duration: .7, stagger: .045, ease: E3 }, 20.45);
+tl.to(P, { neb: 1, duration: 2 }, 20.2);
+// 21.8 IDE rises
+tl.to("#logoWrap", { scale: .32, x: -770, y: -420, opacity: 0, duration: .7, ease: "power3.inOut" }, 21.75);
+tl.fromTo("#ide3", { opacity: 0, y: 500, rotationX: 38, scale: .82 }, { opacity: 1, y: 30, rotationX: 16, scale: .9, duration: 1.2, ease: "power3.out" }, 21.85);
+tl.set(".ic3", { opacity: 0 }, 21.8);
+$$(".ic3").forEach((c, i) => tl.fromTo(c, { opacity: 0, x: R(-1200, 1200), y: R(-900, 900), rotation: R(-40, 40), scale: .5 }, { opacity: 1, x: 0, y: 0, rotation: 0, scale: 1, duration: .8, ease: "power3.out" }, 23.2 + i * .1));
+// 25.8 one simple screen
+tl.to("#ide3", { rotationX: 0, y: 0, scale: .96, duration: 1, ease: "power3.inOut" }, 25.75);
+tl.fromTo("#sweep", { opacity: 1, x: 0 }, { x: 3000, duration: 1.1, ease: "power2.inOut" }, 25.9);
+tl.fromTo(".br", { opacity: 0, scale: 1.6 }, { opacity: 1, scale: 1, duration: .5, ease: E3, stagger: .05 }, 25.95);
+tl.to(".br", { opacity: 0, duration: .4 }, 27.1);
+hide("#s3", 27.3, .4);
+
+// S4 sources 27.64
+show("#s4", 27.4);
+tl.set(["#dash", "#folder", "#flyFiles", "#hundred", "#latency", "#count100", "#cur4", "#beam"], { opacity: 0 }, 27.4);
+tl.fromTo("#hub", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: .7, ease: "back.out(1.6)" }, 27.55);
+tl.set(".src", { opacity: 0 }, 27.4);
+$$("#srcSvg path[id^=ln]").forEach((p) => { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; p.dataset.L = L; });
+const srcT = { onprem: 29.0, aws: 29.95, azure: 31.0, gcp: 31.35, rancher: 32.85 };
+sources.forEach((s) => {
+  const t = srcT[s.k] - .08;
+  tl.fromTo("#src-" + s.k, { opacity: 0, scale: .5, y: -40 }, { opacity: 1, scale: 1, y: 0, duration: .45, ease: "back.out(2)" }, t);
+  tl.to("#ln-" + s.k, { strokeDashoffset: 0, duration: .6, ease: "power2.out" }, t + .1);
+  tl.fromTo("#hub", { scale: 1.12 }, { scale: 1, duration: .35, ease: E3, immediateRender: false }, t + .6);
+});
+// 33.8 one dashboard
+tl.to("#hub", { scale: 9, opacity: 0, duration: .8, ease: "power3.in" }, 33.6);
+tl.to(["#srcSvg", ".src"], { opacity: 0, duration: .5 }, 33.7);
+tl.fromTo("#dash", { opacity: 0, scale: .6 }, { opacity: 1, scale: 1, duration: .8, ease: E3 }, 33.85);
+$$(".dcol").forEach((c, i) => tl.fromTo(c.children, { opacity: 0, y: -260 + i * 0, x: (2 - i) * 60, scale: .6 }, { opacity: 1, y: 0, x: 0, scale: 1, duration: .55, ease: "back.out(1.4)", stagger: .07 }, 34.1 + i * .16));
+// 36.55 sync folders
+tl.to("#dash", { scale: .82, x: 210, y: -30, duration: .7, ease: E2 }, 36.4);
+tl.fromTo("#folder", { opacity: 0, x: -200 }, { opacity: 1, x: 0, duration: .55, ease: E3 }, 36.5);
+tl.to("#syncIcon", { rotation: 720, svgOrigin: "0 0", duration: 2.8, ease: "power1.inOut" }, 36.6);
+tl.set("#flyFiles", { opacity: 1 }, 36.6);
+$$(".ff").forEach((f, i) => tl.fromTo(f, { opacity: 0, x: 0, y: 0, scale: .6 }, { keyframes: [{ opacity: 1, x: 160, y: -120 - i * 30, scale: 1, duration: .35 }, { x: 640 + (i % 3) * 230, y: -400 + Math.floor(i / 3) * 120, opacity: 0, scale: .7, duration: .55, ease: "power2.in" }] }, 36.9 + i * .3));
+tl.fromTo("#syncPill", { scale: 1.4 }, { scale: 1, duration: .4, ease: "back.out(3)", immediateRender: false }, 38.9);
+// 39.81 only the cluster you open
+tl.to(["#dash", "#folder"], { opacity: 0, scale: .9, duration: .45 }, 39.55);
+tl.set("#hundred", { opacity: 1 }, 39.75);
+tl.fromTo(".hd", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: .35, ease: "back.out(2)", stagger: { each: .006, from: "random" } }, 39.8);
+tl.fromTo("#cur4", { opacity: 0, x: 1500, y: 1000 }, { opacity: 1, x: 1101, y: 494, duration: .75, ease: "power2.inOut" }, 40.0);
+tl.to("#cur4", { scale: .82, duration: .07, yoyo: true, repeat: 1 }, 40.75);
+const pick = 46; // row 4, col 6
+tl.to(`.hd:nth-child(${pick + 1})`, { backgroundColor: "#2ec27e", borderColor: "#7bf0b4", boxShadow: "0 0 40px #2ec27e", scale: 1.35, duration: .3, ease: "back.out(3)" }, 40.8);
+tl.to("#cur4", { opacity: 0, duration: .4 }, 41.3);
+// 41.44 fast and light
+tl.fromTo("#latency", { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: .45, ease: E3 }, 41.45);
+tl.to(P, { warp: 1, duration: .4, yoyo: true, repeat: 1, ease: "sine.inOut" }, 41.45);
+// 43.35 even with a hundred clusters
+tl.fromTo("#count100", { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: .45, ease: E3 }, 43.2);
+tl.to(".hd", { y: -12, duration: .18, yoyo: true, repeat: 1, ease: "sine.inOut", stagger: { each: .008, from: "start" } }, 43.35);
+hide("#s4", 44.6, .4);
+
+// S5 45.02 see clearly
+show("#s5", 44.8);
+tl.set(["#topo", "#obs", "#clock1"], { opacity: 0 }, 44.8);
+tl.fromTo("#ide5", { opacity: 0, filter: "blur(22px)", scale: 1.08 }, { opacity: 1, filter: "blur(0px)", scale: .96, duration: 1.1, ease: "power3.out" }, 45.0);
+tl.fromTo("#lens", { opacity: 0, scale: 1.6 }, { opacity: 1, scale: .7, duration: .9, ease: E3 }, 45.0);
+tl.to("#lens", { opacity: 0, scale: .4, duration: .4 }, 45.9);
+[["Pods", 46.92], ["Deployments", 47.45], ["Services", 48.15], ["CRDs", 49.15]].forEach(([k, t]) => {
+  tl.call(showRes, [k], t);
+  tl.fromTo("#resBody", { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: .3, ease: E3, immediateRender: false }, t);
+});
+// 50.39 live
+tl.call(showRes, ["Pods"], 50.3);
+tl.fromTo("#resBody", { opacity: 0 }, { opacity: 1, duration: .2, immediateRender: false }, 50.3);
+tl.fromTo("#liveBadge", { scale: 1 }, { scale: 1.35, duration: .25, yoyo: true, repeat: 3, ease: "sine.inOut" }, 50.4);
+tl.call(() => $$(".st").forEach((s) => { if (s.dataset.v === "Pending") { s.textContent = "Running"; s.style.background = "rgba(46,194,126,.14)"; s.style.color = "#2ec27e"; } }), [], 50.75);
+// 51.73 topology
+tl.to("#ide5", { opacity: 0, scale: .9, rotationY: 12, duration: .5, ease: "power2.in" }, 51.45);
+tl.fromTo("#topo", { opacity: 0, scale: .9 }, { opacity: 1, scale: 1, duration: .6, ease: E3 }, 51.7);
+tl.set(".tn", { opacity: 0 }, 51.7);
+$$(".te").forEach((p) => { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; });
+["ing", "svc", "dep", "rs", "p1", "p2", "p3", "cm", "sec"].forEach((k, i) => tl.fromTo("#tn-" + k, { opacity: 0, scale: .4, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: .4, ease: "back.out(2)" }, 51.85 + [0, .35, .7, 1.05, 1.4, 1.5, 1.6, 2.0, 2.2][i]));
+$$(".te").forEach((p, i) => tl.to(p, { strokeDashoffset: 0, stroke: "#8fb3ff", duration: .4, ease: "power2.out" }, 52.1 + [0, .35, .7, 1.05, 1.15, 1.25, 2.05, 2.25][i]));
+// 55.04 metrics + logs, no commands
+tl.to("#topo", { opacity: 0, scale: 1.08, duration: .45, ease: "power2.in" }, 54.75);
+tl.set("#obs", { opacity: 1 }, 54.95);
+tl.fromTo("#mChart", { opacity: 0, x: -200, rotationY: 20 }, { opacity: 1, x: 0, rotationY: 0, duration: .55, ease: E3 }, 55.0);
+tl.fromTo("#mLogs", { opacity: 0, x: 200, rotationY: -20 }, { opacity: 1, x: 0, rotationY: 0, duration: .55, ease: E3 }, 55.6);
+tl.fromTo("#noCmd", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: .4, ease: E3 }, 56.2);
+tl.to("#strike", { width: 560, duration: .35, ease: "power2.out" }, 56.95);
+tl.to("#noCmd", { opacity: 0, y: 30, filter: "blur(6px)", duration: .4 }, 57.4);
+// 58.69 teaser: an hour → minutes
+tl.to("#obs", { opacity: 0, scale: .92, duration: .4 }, 58.35);
+tl.fromTo("#clock1", { opacity: 0, scale: .6 }, { opacity: 1, scale: 1, duration: .45, ease: "back.out(1.6)" }, 58.6);
+tl.call(() => { $("#clockTxt").textContent = "1 hour"; $("#clockTxt").style.color = "#ff8a8f"; }, [], 58.6);
+tl.call(() => { $("#clockTxt").textContent = "minutes"; $("#clockTxt").style.color = "#2ec27e"; }, [], 60.4);
+tl.fromTo("#clockLbl", { scale: 1.3 }, { scale: 1, duration: .35, ease: "back.out(3)", immediateRender: false }, 60.4);
+tl.to("#clock1", { scale: .85, opacity: 0, duration: .45, ease: "power2.in" }, 61.4);
+hide("#s5", 61.85, .25);
+
+// S6 AI 62.07
+tl.to(P, { neb: .2, duration: .5 }, 61.8);
+show("#s6", 61.9);
+tl.set(["#ide6", "#payoff", "#cur6"], { opacity: 0 }, 61.9);
+tl.fromTo("#spark6", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: .35, ease: "back.out(3)" }, 62.05);
+tl.to("#spark6", { scale: 1.6, duration: .5, yoyo: true, repeat: 1, ease: "sine.inOut" }, 62.4);
+tl.to("#spark6", { scale: 60, opacity: 0, duration: .7, ease: "power3.in" }, 63.0);
+tl.to(P, { neb: 1, hue: 1, duration: 1 }, 63.0);
+flash(63.55, .5, .5);
+tl.fromTo("#ide6", { opacity: 0, scale: .9 }, { opacity: 1, scale: 1, duration: .7, ease: E3 }, 63.45);
+tl.fromTo("#aiPanel", { x: 400, opacity: 0 }, { x: 0, opacity: 1, duration: .7, ease: "power4.out" }, 63.75);
+tl.set(["#qBubble", ".t6", "#cause", "#fix", "#applied"], { opacity: 0 }, 63.4);
+tl.fromTo("#qBubble", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: .3 }, 66.3);
+(function () { const q = "Why is checkout-api crashing?"; const o = { n: 0 }; tl.to(o, { n: q.length, duration: 1.5, ease: "none", onUpdate: () => { $("#qText").textContent = q.slice(0, Math.round(o.n)); } }, 66.4); })();
+[69.25, 70.05, 70.55].forEach((t, i) => tl.fromTo($$(".t6")[i], { opacity: 0, scale: .6 }, { opacity: 1, scale: 1, duration: .3, ease: "back.out(3)" }, t));
+tl.fromTo("#cause", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: .45, ease: E3 }, 71.0);
+tl.fromTo("#cause", { boxShadow: "0 0 0 rgba(245,165,36,0)" }, { boxShadow: "0 0 40px rgba(245,165,36,.45)", duration: .4, yoyo: true, repeat: 1, immediateRender: false }, 71.3);
+tl.fromTo("#fix", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: .45, ease: E3 }, 72.35);
+const aim = (sel, fx, fy) => () => { const r = $(sel).getBoundingClientRect(); return { x: r.left + r.width * fx - 9, y: r.top + r.height * fy - 4 }; };
+tl.fromTo("#cur6", { opacity: 0, x: 1650, y: 1060 }, { opacity: 1, x: () => aim("#approve", .55, .6)().x, y: () => aim("#approve", .55, .6)().y, duration: .8, ease: "power2.inOut" }, 73.1);
+tl.to("#cur6", { scale: .82, duration: .07, yoyo: true, repeat: 1 }, 74.0);
+tl.to("#approve", { scale: .94, duration: .08, yoyo: true, repeat: 1 }, 74.0);
+tl.fromTo("#applied", { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: .3 }, 74.2);
+tl.call(() => { $("#podStatus").innerHTML = `<span class="chip mono" style="background:rgba(46,194,126,.14);color:#2ec27e;font-size:15px;padding:6px 10px">Running</span>`; $("#podRestarts").textContent = "0"; }, [], 74.3);
+tl.fromTo("#podStatus", { scale: 1.4 }, { scale: 1, duration: .4, ease: "back.out(3)", immediateRender: false }, 74.3);
+tl.to("#cur6", { opacity: 0, duration: .3 }, 74.6);
+// 75.43 payoff
+tl.to("#ide6", { opacity: 0, scale: .9, filter: "blur(8px)", duration: .45, ease: "power2.in" }, 75.05);
+tl.set("#payoff", { opacity: 1 }, 75.35);
+tl.set(["#payArrow", "#pay3"], { opacity: 0 }, 75.35);
+tl.fromTo("#pay60", { opacity: 0, scale: 1.4 }, { opacity: 1, scale: 1, duration: .4, ease: "power4.out" }, 75.4);
+tl.to("#payStrike", { width: 420, duration: .35, ease: "power2.out" }, 76.5);
+tl.fromTo("#payArrow", { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: .3 }, 76.75);
+tl.fromTo("#pay3", { opacity: 0, scale: 2 }, { opacity: 1, scale: 1, duration: .45, ease: "back.out(2)" }, 76.95);
+flash(76.97, .35, .4);
+tl.to(P, { warp: 1, duration: .3, yoyo: true, repeat: 1 }, 76.95);
+hide("#s6", 78.15, .35);
+tl.to(P, { hue: 0, duration: 1 }, 78.2);
+
+// S7 features 78.5
+show("#s7", 78.3);
+tl.set("#ide7", { opacity: 0 }, 78.3);
+const fT = [78.6, 79.2, 80.2, 80.65, 81.1, 82.5, 83.35];
+tl.fromTo("#ringHub", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: .6, ease: "back.out(2)" }, 78.4);
+tl.to("#ringHub", { scale: 1.5, opacity: 0, duration: .5, ease: "power2.in" }, 84.85);
+$$(".ft").forEach((t, i) => tl.fromTo(t, { opacity: 0, scale: .3 }, { opacity: 1, scale: 1, duration: .45, ease: "back.out(2)" }, fT[i] - .05));
+// collapse into one place
+$$(".ft").forEach((t, i) => tl.to(t, { opacity: 0, scale: .2, duration: .5, ease: "power3.in" }, 84.85 + i * .04));
+tl.fromTo("#ide7", { opacity: 0, scale: .7 }, { opacity: 1, scale: 1, duration: .8, ease: E3 }, 85.2);
+tl.fromTo(".r7", { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: .35, ease: "back.out(3)", stagger: .07 }, 85.5);
+tl.fromTo(".m7", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .45, ease: E3, stagger: .07 }, 85.6);
+tl.fromTo("#ide7", { boxShadow: "0 60px 140px rgba(0,0,0,.65)" }, { boxShadow: "0 0 0 2px rgba(124,92,255,.6), 0 0 120px rgba(124,92,255,.4)", duration: .6, yoyo: true, repeat: 1, immediateRender: false }, 86.6);
+hide("#s7", 88.0, .35);
+
+// S8 free 88.43
+show("#s8", 88.2);
+tl.set(["#devices"], { opacity: 0 }, 88.2);
+tl.fromTo("#entLabel", { opacity: 0, letterSpacing: "22px" }, { opacity: 1, letterSpacing: "7px", duration: .6, ease: E3 }, 88.4);
+tl.fromTo(".bdg", { opacity: 0, y: 40, scale: .8 }, { opacity: 1, y: 0, scale: 1, duration: .4, ease: "back.out(2)", stagger: .1 }, 88.5);
+tl.fromTo("#tagWrap", { opacity: 0, y: -300, rotation: -14 }, { opacity: 1, y: 0, rotation: 0, duration: .9, ease: "elastic.out(1,.5)" }, 88.9);
+tl.set("#free", { opacity: 0 }, 88.2);
+tl.fromTo("#free", { opacity: 0, scale: 2.4, rotation: -14 }, { opacity: 1, scale: 1, rotation: -6, duration: .35, ease: "power4.in" }, 90.0);
+shake(90.33, 16, 7);
+flash(90.33, .45, .5);
+tl.to("#tagWrap", { rotation: 4, duration: .5, yoyo: true, repeat: 1, ease: "sine.inOut" }, 90.4);
+// 91.98 platforms
+tl.to(["#badges", "#tagWrap", "#entLabel"], { opacity: 0, y: -40, duration: .4 }, 91.7);
+tl.set("#devices", { opacity: 1 }, 92.0);
+tl.set(".dev", { opacity: 0 }, 92.0);
+[92.55, 93.05, 93.55].forEach((t, i) => tl.fromTo($$(".dev")[i], { opacity: 0, y: 120, rotationX: 40 }, { opacity: 1, y: 0, rotationX: 0, duration: .5, ease: "back.out(1.5)" }, t - .08));
+hide("#s8", 94.35, .3);
+
+// S9 end 94.67
+show("#s9", 94.5);
+tl.set(["#tagline", "#cta", "#osRow"], { opacity: 0 }, 94.5);
+flash(94.67, .9, .7);
+tl.fromTo("#logo9", { scale: 0, rotation: 180 }, { scale: 1, rotation: 0, duration: .9, ease: "back.out(1.6)" }, 94.67);
+tl.fromTo("#word9", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: .7, ease: E3 }, 94.85);
+tl.fromTo("#tagline", { opacity: 0, y: 30, letterSpacing: "12px" }, { opacity: 1, y: 0, letterSpacing: "0px", duration: .8, ease: E3 }, 95.75);
+tl.to(["#logo9", "#word9", "#tagline"], { y: -60, duration: .8, ease: E2 }, 97.6);
+tl.fromTo("#cta", { opacity: 0, y: 80 }, { opacity: 1, y: -60, duration: .6, ease: E3 }, 98.0);
+tl.fromTo("#dlBtn", { boxShadow: "0 20px 60px rgba(110,110,255,.5)" }, { boxShadow: "0 0 0 6px rgba(124,92,255,.35), 0 20px 90px rgba(110,110,255,.8)", duration: .5, yoyo: true, repeat: 3, ease: "sine.inOut", immediateRender: false }, 99.2);
+tl.fromTo("#osRow", { opacity: 0, y: 20 }, { opacity: 1, y: -60, duration: .6, ease: E3 }, 99.3);
+tl.to("#cam", { scale: 1.04, duration: 6, ease: "sine.inOut" }, 98.0);
+tl.to("#fade", { opacity: 1, duration: 1.1, ease: "power2.in" }, 103.1);
+
+window.DURATION = 104.4;
+
+// ---------- per-frame updaters ----------
+updaters.push((t) => { // restarts + logs scroll + timer + mem path
+  if (t > 9.5 && t < 20) {
+    $("#restarts").textContent = String(14 + Math.floor(clamp((t - 10.3) * 1.6, 0, 99)));
+    $("#logLines").scrollTop = clamp((t - 14.4) * 60, 0, 600);
+    const secs = Math.floor(clamp(t - 15.64, 0, 9) * 380 + 47 * 60);
+    $("#timerVal").textContent = [Math.floor(secs / 3600), Math.floor(secs / 60) % 60, secs % 60].map((x) => String(x).padStart(2, "0")).join(":");
+  }
+  if (t > 54.9 && t < 58.6) { $("#okLogs").scrollTop = (t - 55.6) * 70; }
+});
+updaters.push((t) => { // S4 flow particles
+  if (t < 27.5 || t > 34.3) return;
+  $$(".flow").forEach((c) => {
+    const p = $("#ln-" + c.dataset.src), st = srcT[c.dataset.src] + .55, L = +p.dataset.L;
+    if (t < st) { c.setAttribute("opacity", 0); return; }
+    const u = ((t - st) * .7 + c.dataset.j / 3) % 1, pt = p.getPointAtLength(u * L);
+    c.setAttribute("cx", pt.x); c.setAttribute("cy", pt.y); c.setAttribute("opacity", Math.sin(u * Math.PI));
+  });
+});
+updaters.push((t) => { // topology particles
+  if (t < 52 || t > 55.3) return;
+  $$(".tp").forEach((c) => {
+    const i = +c.dataset.e, p = $("#te" + i), st = 52.5 + i * .25;
+    if (t < st) { c.setAttribute("opacity", 0); return; }
+    const u = ((t - st) * .8) % 1, pt = p.getPointAtLength(u * p.getTotalLength());
+    c.setAttribute("cx", pt.x); c.setAttribute("cy", pt.y); c.setAttribute("opacity", Math.sin(u * Math.PI));
+  });
+});
+updaters.push((t) => { // CPU chart
+  if (t < 54.9 || t > 58.6) return;
+  const n = Math.floor(clamp((t - 55.1) / 1.6, 0, 1) * 60);
+  let d = "", a = "";
+  for (let i = 0; i <= n; i++) { const x = 40 + i * 12.5, y = 330 - 90 * Math.sin(i / 6) - 40 * Math.sin(i / 2.3 + 1) - 30; d += (i ? " L" : "M") + x + "," + y; }
+  if (n > 1) a = d + ` L${40 + n * 12.5},470 L40,470 Z`;
+  $("#cpuSvg").innerHTML = `${[0, 1, 2, 3].map((i) => `<line x1="40" x2="790" y1="${120 + i * 100}" y2="${120 + i * 100}" stroke="#1c2740"/>`).join("")}<path d="${a}" fill="rgba(79,140,255,.16)"/><path d="${d}" fill="none" stroke="#4f8cff" stroke-width="4" stroke-linejoin="round"/>${n > 1 ? `<circle cx="${40 + n * 12.5}" cy="${330 - 90 * Math.sin(n / 6) - 40 * Math.sin(n / 2.3 + 1) - 30}" r="8" fill="#fff" stroke="#4f8cff" stroke-width="4"/>` : ""}`;
+});
+updaters.push((t) => { // clock
+  if (t < 58.5 || t > 62) return;
+  const turns = t < 60.36 ? (t - 58.6) * 2.4 : 4.2 + (t - 60.36) * .25;
+  const ang = turns * 360;
+  $("#hMin").setAttribute("transform", `rotate(${ang})`); $("#hHr").setAttribute("transform", `rotate(${ang / 12})`);
+  const span = t < 60.36 ? 359.9 : 18;
+  const r = 100, a1 = -90, a2 = -90 + span;
+  const p = (a) => [Math.cos(a * Math.PI / 180) * r, Math.sin(a * Math.PI / 180) * r];
+  const [x1, y1] = p(a1), [x2, y2] = p(a2);
+  $("#clockArc").setAttribute("d", `M0,0 L${x1},${y1} A${r},${r} 0 ${span > 180 ? 1 : 0} 1 ${x2},${y2} Z`);
+  $("#clockArc").setAttribute("fill", t < 60.36 ? "rgba(242,84,91,.25)" : "rgba(46,194,126,.35)");
+});
+updaters.push((t) => { // 100 counter
+  if (t < 43 || t > 45) return;
+  $("#c100").textContent = String(Math.round(ease((t - 43.25) / .8) * 100));
+});
+updaters.push((t) => { // S7 3D ring
+  if (t < 78.3 || t > 88.5) return;
+  const tiles = $$(".ftw"), n = tiles.length, base = (t - 78.4) * 13 - 25;
+  tiles.forEach((e, i) => {
+    const a = (i / n) * 360 + base, rad = a * Math.PI / 180;
+    const depth = (Math.cos(rad) + 1) / 2, x = Math.sin(rad) * 760;
+    e.style.left = (x - 165) + "px"; e.style.top = (-95 + 120 * depth - 60) + "px";
+    e.style.zIndex = String(Math.round(depth * 1000));
+    e.style.transform = `scale(${.58 + .48 * depth})`;
+    e.style.filter = `brightness(${.45 + .6 * depth}) blur(${(1 - depth) * 2.2}px)`;
+  });
+  $("#ring").style.transform = `translate(-50%,-50%) scale(${.92 + .08 * Math.sin((t - 78.4) / 3)})`;
+});
+
+// ---------- canvases ----------
+const bg = $("#bg").getContext("2d"), fx = $("#fx").getContext("2d"), gr = $("#grain").getContext("2d");
+const stars = [...Array(260)].map(() => ({ x: R(0, 1920), y: R(0, 1080), z: R(.2, 1), tw: R(0, 6) }));
+function drawBG(t) {
+  const g = bg; g.globalCompositeOperation = "source-over";
+  g.fillStyle = "#05070d"; g.fillRect(0, 0, 1920, 1080);
+  const hueShift = P.hue;
+  const blobs = [
+    [300 + Math.sin(t * .11) * 220, 200 + Math.cos(t * .09) * 120, 900, hueShift ? "rgba(124,92,255,.42)" : "rgba(43,75,255,.40)"],
+    [1600 + Math.cos(t * .08) * 220, 900 + Math.sin(t * .1) * 140, 950, "rgba(124,58,237,.38)"],
+    [960 + Math.sin(t * .05) * 300, 520, 700, hueShift ? "rgba(192,132,252,.22)" : "rgba(30,144,255,.20)"],
+  ];
+  const k = .55 + .45 * P.neb;
+  blobs.forEach(([x, y, r, c]) => { const gg = g.createRadialGradient(x, y, 0, x, y, r); gg.addColorStop(0, c); gg.addColorStop(1, "rgba(0,0,0,0)"); g.globalAlpha = k; g.fillStyle = gg; g.fillRect(0, 0, 1920, 1080); });
+  if (P.red > 0) { const gg = g.createRadialGradient(960, 540, 0, 960, 540, 1100); gg.addColorStop(0, `rgba(140,20,30,${.5 * P.red})`); gg.addColorStop(1, "rgba(0,0,0,0)"); g.globalAlpha = 1; g.fillStyle = gg; g.fillRect(0, 0, 1920, 1080); }
+  g.globalAlpha = 1;
+  // stars + warp
+  stars.forEach((s) => {
+    let x = (s.x - t * 14 * s.z) % 1920; if (x < 0) x += 1920;
+    const a = (.35 + .65 * Math.abs(Math.sin(t * .8 + s.tw))) * s.z;
+    if (P.warp > .02) {
+      const dx = x - 960, dy = s.y - 540, len = 1 + P.warp * 60 * s.z;
+      g.strokeStyle = `rgba(200,220,255,${a})`; g.lineWidth = s.z * 2; g.beginPath(); g.moveTo(x, s.y); g.lineTo(x + dx / 900 * len * 6, s.y + dy / 900 * len * 6); g.stroke();
+    } else { g.fillStyle = `rgba(210,225,255,${a})`; g.fillRect(x, s.y, s.z * 2.2, s.z * 2.2); }
+  });
+  // perspective grid floor
+  const ga = P.grid * (.5 + .5 * P.neb);
+  if (ga > .01) {
+    g.save(); g.globalAlpha = ga * .5; g.strokeStyle = "#4f8cff"; g.lineWidth = 1.2;
+    const hz = 700, off = (t * 40) % 80;
+    for (let i = 0; i < 14; i++) { const z = (i * 80 + off); const y = hz + Math.pow(z / 1120, 2.2) * 380; g.globalAlpha = ga * .45 * (z / 1120); g.beginPath(); g.moveTo(0, y); g.lineTo(1920, y); g.stroke(); }
+    for (let i = -16; i <= 16; i++) { g.globalAlpha = ga * .25; g.beginPath(); g.moveTo(960 + i * 30, hz); g.lineTo(960 + i * 260, 1080); g.stroke(); }
+    g.restore();
+  }
+}
+// particle bursts: [time, x, y, count, speed, colors, life, gravity]
+const bursts = [[20.2, 960, 440, 160, 900, ["#ffffff", "#9db8ff", "#c084fc"], 1.6, 0], [3.62, 960, 540, 60, 700, ["#4f8cff", "#7c5cff"], 1.0, 0], [90.33, 960, 600, 220, 1200, ["#2ec27e", "#4f8cff", "#f5a524", "#c084fc", "#ffffff"], 2.4, 900], [94.67, 960, 380, 120, 800, ["#ffffff", "#9db8ff", "#c084fc"], 1.5, 0], [76.95, 1250, 540, 70, 700, ["#2ec27e", "#ffffff"], 1.1, 0], [63.55, 960, 540, 90, 900, ["#c084fc", "#ffffff"], 1.2, 0]]
+  .map(([t0, x, y, n, sp, cols, life, gv]) => ({ t0, x, y, life, gv, ps: [...Array(n)].map(() => { const a = R(0, Math.PI * 2), v = R(.2, 1) * sp; return { vx: Math.cos(a) * v, vy: Math.sin(a) * v - (gv ? R(200, 700) : 0), c: cols[Math.floor(rnd() * cols.length)], s: R(2, 6), rot: R(0, 6) }; }) }));
+const implodeP = [...Array(200)].map(() => ({ x: R(0, 1920), y: R(0, 1080), d: R(0, .4), c: ["#ff8a8f", "#9fb0cf", "#f5c26b", "#4f8cff"][Math.floor(rnd() * 4)] }));
+function drawFX(t) {
+  const g = fx; g.clearRect(0, 0, 1920, 1080);
+  bursts.forEach((b) => {
+    const dt = t - b.t0; if (dt < 0 || dt > b.life) return;
+    const fade = 1 - dt / b.life;
+    b.ps.forEach((p) => {
+      const drag = Math.exp(-dt * 2.2), x = b.x + p.vx * (1 - drag) / 2.2, y = b.y + p.vy * (1 - drag) / 2.2 + .5 * b.gv * dt * dt;
+      g.globalAlpha = fade; g.fillStyle = p.c;
+      if (b.gv) { g.save(); g.translate(x, y); g.rotate(p.rot + dt * 6); g.fillRect(-p.s, -p.s / 2, p.s * 2.4, p.s * 1.2); g.restore(); }
+      else { g.beginPath(); g.arc(x, y, p.s * fade, 0, Math.PI * 2); g.fill(); }
+    });
+  });
+  if (P.implode > 0 && P.implode < 1) {
+    implodeP.forEach((p) => { const u = clamp((P.implode - p.d) / (1 - p.d), 0, 1), k = u * u; const x = p.x + (960 - p.x) * k, y = p.y + (540 - p.y) * k;
+      g.globalAlpha = 1 - u * .3; g.strokeStyle = p.c; g.lineWidth = 2; g.beginPath(); g.moveTo(x, y); g.lineTo(x + (960 - x) * .08, y + (540 - y) * .08); g.stroke(); });
+  }
+  if (t > 19.3 && t < 20.3) { const k = clamp((t - 19.3) / .9, 0, 1); const r = 4 + k * 10; g.globalAlpha = 1; const gg = g.createRadialGradient(960, 540, 0, 960, 540, r * 8); gg.addColorStop(0, "#fff"); gg.addColorStop(.2, "rgba(170,190,255,.8)"); gg.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gg; g.beginPath(); g.arc(960, 540, r * 8, 0, Math.PI * 2); g.fill(); }
+  g.globalAlpha = 1;
+}
+let gseed = 1;
+function drawGrain(t) {
+  const img = gr.createImageData(480, 270), d = img.data; let s = (Math.floor(t * 60) * 7919 + 1) % 2147483647;
+  for (let i = 0; i < d.length; i += 4) { s = (s * 16807) % 2147483647; const v = (s & 255); d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
+  gr.putImageData(img, 0, 0);
+}
+
+window.seek = (t) => { tl.seek(t, false); updaters.forEach((u) => u(t)); drawBG(t); drawFX(t); drawGrain(t); };
+window.seek(0);
+</script>
+</body>
+</html>
