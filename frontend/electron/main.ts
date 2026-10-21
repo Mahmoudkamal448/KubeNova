@@ -70,6 +70,8 @@ function createWindow() {
     minHeight: 700,
     backgroundColor: "#0b0f17",
     title: "KubeNova",
+    // Window/taskbar icon on Linux (macOS and Windows use the app bundle's icon).
+    ...(process.platform === "linux" ? { icon: path.join(__dirname, "..", "build", "icon.png") } : {}),
     // macOS keeps its traffic lights inset; Windows and Linux draw their
     // window buttons over KubeNova's own top bar instead of a system title
     // bar and a light menu bar that clash with the app.
